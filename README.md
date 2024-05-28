@@ -44,7 +44,7 @@ After completing the course, participants will
 2. be able to choose an appropriate method to use to analyse a data set,
 3. know how to diagnose problems with fitted models,
 4. be able to use the R statistical software to analyse multivariate data
-5. be able to use the R statistical software and in particular the lme4, glmmTMB, and marginaleffects packages to fit and analyse generalized linear mixed effects models.
+5. be able to use the R statistical software and in particular the *lme4*, *glmmTMB*, and *marginaleffects* packages to fit and analyse generalized linear mixed effects models.
 
 ## Compulsory programme
 
