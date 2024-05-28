@@ -8,6 +8,8 @@
 
 * Language: English
 
+* Fee: 350 DKK
+
 <!-- ### Slides
 
 * [Monday](https://gavinsimpson.github.io/au-multivariate-stats/slides/01-dissimilarity-clustering-diversity/slides.html)
