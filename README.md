@@ -2,7 +2,7 @@
 
 ### Aarhus University PhD Course
 
-* Autumn 2024 running: August 13<sup>th</sup> &ndash; 15<sup>th</sup>
+* January 2025 running: January 7<sup>th</sup> &ndash; 9<sup>th</sup>
 
 * ECTS credits: 1.5 ECTS
 
