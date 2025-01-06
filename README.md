@@ -10,9 +10,10 @@
 
 * Fee: 350 DKK
 
+
 ## Name of course leader
 
-Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences, Aarhus University gavin@anivet.au.dk
+Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences, Aarhus University <gavin@anivet.au.dk>
 
 ### Registration
 
@@ -136,7 +137,3 @@ Now we can install the required packages
 ```r
 install.packages(c("tidyverse", "lme4", "marginaleffects", "DHARMa", "glmmTMB"))
 ```
-
-## Name of course leader
-
-Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences, Aarhus University <gavin@anivet.au.dk>
