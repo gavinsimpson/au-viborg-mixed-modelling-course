@@ -2,7 +2,7 @@
 
 ### Aarhus University PhD Course
 
-* Autumn 2024 running: August 13<sup>th</sup> &ndash; 15<sup>th</sup>
+* Winter 2025 running: January 7<sup>th</sup> &ndash; 9<sup>th</sup>
 
 * ECTS credits: 1.5 ECTS
 
@@ -44,7 +44,7 @@ To register for the course, please contact Julie Jensen on jsj@anivet.au.dk.
 
 ## Objectives of the course
 
-The course will provide an applied introduction to generalized linear mixed modelling in R for biologists. The course will equip participants to fit appropriate models to data using R and the lme4 and glmmTMB packages, how to test the assumptions of the fitted model and assess the adequacy of fit, and how to use the model to estimate quantities of interest or test hypotheses of interest using the marginaleffects package.
+The course will provide an applied introduction to generalized linear mixed modelling in R for biologists. The course will equip participants to fit appropriate models to data using R and the *lme4* and *glmmTMB* packages, how to test the assumptions of the fitted model and assess the adequacy of fit, and how to use the model to estimate quantities of interest or test hypotheses of interest using the *marginaleffects* package.
 
 ## Learning outcomes and competences
 
@@ -58,7 +58,7 @@ After completing the course, participants will
 
 ## Compulsory programme
 
-Active participation in the course including attendance at lectures and completion of computer-based classes and exercises. Completion of short, computer-based assessments testing their understanding of a topic and the practical skills taught. For credit, students must complete a data analysis exercise to be submitted one week after the end of the course (23rd August).
+Active participation in the course including attendance at lectures and completion of computer-based classes and exercises. Completion of short, computer-based assessments testing their understanding of a topic and the practical skills taught.
 
 ## Course content
 
@@ -76,9 +76,9 @@ The course covers the following topics:
 
 ## Prerequisites
 
-This course is suitable for Phd students (including senior thesis-based masters students) and researchers working with biological data where observations are correlated or grouped in some way, such as longitudinal data, or experimental data with blocking. The course will be of particular interest to PhD candidates and researchers in inter alia biology, animal science, ecology, agriculture. Some prior knowledge of R is required, and some prior knowledge of generalized linear modelling in R would be an advantage.
+This course is suitable for Phd students (including senior thesis-based masters students) and researchers working with biological data where observations are correlated or grouped in some way, such as longitudinal data, or experimental data with blocking. The course will be of particular interest to PhD candidates and researchers in *inter alia* biology, animal science, ecology, agriculture. Some prior knowledge of R is required, and some prior knowledge of generalized linear modelling in R would be an advantage.
 
-<!-- ## Computing requirements
+## Computing requirements
 
 Participants need to bring their own laptop with the latest version of R installed (version 4.4.0 or later), as well as the current version of RStudio. If you use another editor for your R code feel free to use it instead of Rstudio, but we cannot help you if you encounter problems with it.
 
@@ -96,28 +96,28 @@ and look at the entry next to `version.string`:
 
 ```
 r$> version                                                                     
-               _                           
-platform       x86_64-pc-linux-gnu         
-arch           x86_64                      
-os             linux-gnu                   
-system         x86_64, linux-gnu           
-status                                     
-major          4                           
-minor          2.1                         
-year           2022                        
-month          06                          
-day            23                          
-svn rev        82513                       
-language       R                           
-version.string R version 4.2.1 (2022-06-23)
-nickname       Funny-Looking Kid
+               _
+platform       aarch64-apple-darwin20
+arch           aarch64
+os             darwin20
+system         aarch64, darwin20
+status
+major          4
+minor          4.2
+year           2024
+month          10
+day            31
+svn rev        87279
+language       R
+version.string R version 4.4.2 (2024-10-31)
+nickname       Pile of Leaves
 ```
 
-This should include `4.4.x` if you are running the latest release, but should be no lower than `4.2.0`. If the installed version of R is < 4.4.0, install a newver version of R by downloading and running one of the installers from [cloud.r-project.org](https://cloud.r-project.org/) as mentioned above.
+This should include `4.4.x` if you are running the latest release. If the installed version of R is < 4.4.0, install a newer version of R by downloading and running one of the installers from [cloud.r-project.org](https://cloud.r-project.org/) as mentioned above.
 
 To check that RStudio is up-to-date, open RStudio, open the Help menu, and choose *Check for Updates*. RStudio will then check to see if there is a newer version available and if there is it will give you the option to download the newer version.
 
-Prior to arriving at AU Viborg on the 19th of September, make sure you have updated your installed R packages and that you have installed the following packages: tidyverse, vegan, mvabund, boral, ecoCopula, and cocorresp. To do this, open RStudio (or R) and in the console window (usually lower left, with a prompt that looks like `>`) run
+Prior to arriving at AU Viborg on the 7th of January, make sure you have updated your installed R packages and that you have installed the packages listed below. To do this, open RStudio (or R) and in the console window (usually lower left, with a prompt that looks like `>`) run
 
 ```r
 parallel::detectCores(logical = FALSE)
@@ -134,11 +134,9 @@ Change the value of `Ncpus` to the number cores you have on your computer as thi
 Now we can install the required packages
 
 ```r
-install.packages(c("tidyverse", "vegan"))
+install.packages(c("tidyverse", "lme4", "marginaleffects", "DHARMa", "glmmTMB"))
 ```
-
--->
 
 ## Name of course leader
 
-Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences, Aarhus University gavin@anivet.au.dk
+Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences, Aarhus University <gavin@anivet.au.dk>
