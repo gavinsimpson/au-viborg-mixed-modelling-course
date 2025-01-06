@@ -16,7 +16,7 @@ Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences
 
 ### Registration
 
-To register for the course, please contact Julie Jensen on jsj@anivet.au.dk.
+You can register for this course here: <https://events.au.dk/phdcourseappliedmixedmodellingwithr>
 
 <!-- ### Slides
 
