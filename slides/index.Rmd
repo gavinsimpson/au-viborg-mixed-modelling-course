@@ -320,7 +320,7 @@ y_i & \sim \text{Poisson}(\lambda_i) \\
 
 # New notation
 
-```{r}
+```{r dist-fig-1, fig.align = "center", out.width = "80%", echo = FALSE}
 knitr::include_graphics("resources/fig-gaussian-lm-descriptive-figure-1.png")
 ```
 
@@ -328,7 +328,7 @@ knitr::include_graphics("resources/fig-gaussian-lm-descriptive-figure-1.png")
 
 # New notation
 
-```{r}
+```{r dist-fig-2, fig.align = "center", out.width = "80%", echo = FALSE}
 knitr::include_graphics("resources/fig-poisson-lm-descriptive-figure-1.png")
 ```
 
@@ -336,7 +336,7 @@ knitr::include_graphics("resources/fig-poisson-lm-descriptive-figure-1.png")
 
 # New notation
 
-```{r}
+```{r dist-fig-3, fig.align = "center", out.width = "80%", echo = FALSE}
 knitr::include_graphics("resources/fig-other-dist-descr-1.png")
 ```
 
