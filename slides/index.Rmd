@@ -294,7 +294,7 @@ g(\mu_i) & = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
 
 # New notation
 
-```{r}
+```{r dist-fig-1, fig.align = "center", out.width = "80%", echo = FALSE}
 knitr::include_graphics("resources/fig-gaussian-lm-descriptive-figure-1.png")
 ```
 
@@ -316,13 +316,6 @@ y_i & \sim \text{Poisson}(\lambda_i) \\
 \log(\lambda_i) & = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
 \end{align*}
 
----
-
-# New notation
-
-```{r dist-fig-1, fig.align = "center", out.width = "80%", echo = FALSE}
-knitr::include_graphics("resources/fig-gaussian-lm-descriptive-figure-1.png")
-```
 
 ---
 
