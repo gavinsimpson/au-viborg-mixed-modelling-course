@@ -1,0 +1,241 @@
+"species","replication","time","nhard","nsoft"
+"T. glomeratum",1,0,98,2
+"T. glomeratum",2,0,99,1
+"T. glomeratum",3,0,99,1
+"T. glomeratum",4,0,99,1
+"T. spumosum",1,0,94,6
+"T. spumosum",2,0,93,7
+"T. spumosum",3,0,95,5
+"T. spumosum",4,0,96,4
+"T. hirtum",1,0,88,12
+"T. hirtum",2,0,89,11
+"T. hirtum",3,0,86,14
+"T. hirtum",4,0,92,8
+"T. nigrescens",1,0,99,1
+"T. nigrescens",2,0,98,2
+"T. nigrescens",3,0,100,0
+"T. nigrescens",4,0,100,0
+"T. tomentosum",1,0,93,7
+"T. tomentosum",2,0,96,4
+"T. tomentosum",3,0,95,5
+"T. tomentosum",4,0,95,5
+"T. sub sub",1,0,83,17
+"T. sub sub",2,0,88,12
+"T. sub sub",3,0,87,13
+"T. sub sub",4,0,87,13
+"T. scutatum",1,0,90,10
+"T. scutatum",2,0,90,10
+"T. scutatum",3,0,84,16
+"T. scutatum",4,0,78,22
+"T. pilulare",1,0,77,23
+"T. pilulare",2,0,83,17
+"T. pilulare",3,0,100,0
+"T. pilulare",4,0,100,0
+"T. glomeratum",1,28,99,1
+"T. glomeratum",2,28,99,1
+"T. spumosum",1,28,97,3
+"T. spumosum",2,28,92,8
+"T. hirtum",1,28,88,12
+"T. hirtum",2,28,87,13
+"T. nigrescens",1,28,100,0
+"T. nigrescens",2,28,100,0
+"T. tomentosum",1,28,98,2
+"T. tomentosum",2,28,88,12
+"T. sub sub",1,28,76,24
+"T. sub sub",2,28,80,20
+"T. scutatum",1,28,85,15
+"T. scutatum",2,28,85,15
+"T. pilulare",1,28,87,13
+"T. pilulare",2,28,80,20
+"T. glomeratum",1,42,99,1
+"T. glomeratum",2,42,100,0
+"T. spumosum",1,42,96,4
+"T. spumosum",2,42,97,3
+"T. hirtum",1,42,89,11
+"T. hirtum",2,42,88,12
+"T. nigrescens",1,42,99,1
+"T. nigrescens",2,42,93,7
+"T. tomentosum",1,42,96,4
+"T. tomentosum",2,42,99,1
+"T. sub sub",1,42,78,22
+"T. sub sub",2,42,72,28
+"T. scutatum",1,42,85,15
+"T. scutatum",2,42,84,16
+"T. pilulare",1,42,80,20
+"T. pilulare",2,42,83,17
+"T. glomeratum",1,56,96,4
+"T. glomeratum",2,56,98,2
+"T. spumosum",1,56,95,5
+"T. spumosum",2,56,89,11
+"T. hirtum",1,56,91,9
+"T. hirtum",2,56,94,6
+"T. nigrescens",1,56,95,5
+"T. nigrescens",2,56,94,6
+"T. tomentosum",1,56,95,5
+"T. tomentosum",2,56,99,1
+"T. sub sub",1,56,65,35
+"T. sub sub",2,56,80,20
+"T. scutatum",1,56,83,17
+"T. scutatum",2,56,85,15
+"T. pilulare",1,56,67,33
+"T. pilulare",2,56,70,30
+"T. glomeratum",1,63,92,8
+"T. glomeratum",2,63,91,9
+"T. spumosum",1,63,95,5
+"T. spumosum",2,63,98,2
+"T. hirtum",1,63,78,22
+"T. hirtum",2,63,84,16
+"T. nigrescens",1,63,90,10
+"T. nigrescens",2,63,89,11
+"T. tomentosum",1,63,99,1
+"T. tomentosum",2,63,95,5
+"T. sub sub",1,63,47,53
+"T. sub sub",2,63,49,51
+"T. scutatum",1,63,81,19
+"T. scutatum",2,63,78,22
+"T. pilulare",1,63,,
+"T. pilulare",2,63,,
+"T. glomeratum",1,70,86,14
+"T. glomeratum",2,70,91,9
+"T. spumosum",1,70,95,5
+"T. spumosum",2,70,93,7
+"T. hirtum",1,70,84,16
+"T. hirtum",2,70,77,23
+"T. nigrescens",1,70,81,19
+"T. nigrescens",2,70,79,21
+"T. tomentosum",1,70,98,2
+"T. tomentosum",2,70,96,4
+"T. sub sub",1,70,46,54
+"T. sub sub",2,70,53,47
+"T. scutatum",1,70,66,34
+"T. scutatum",2,70,71,29
+"T. pilulare",1,70,61,39
+"T. pilulare",2,70,67,33
+"T. glomeratum",1,84,78,22
+"T. glomeratum",2,84,80,20
+"T. spumosum",1,84,95,5
+"T. spumosum",2,84,89,11
+"T. hirtum",1,84,73,27
+"T. hirtum",2,84,76,24
+"T. nigrescens",1,84,51,49
+"T. nigrescens",2,84,58,42
+"T. tomentosum",1,84,92,8
+"T. tomentosum",2,84,97,3
+"T. sub sub",1,84,37,63
+"T. sub sub",2,84,40,60
+"T. scutatum",1,84,43,57
+"T. scutatum",2,84,34,66
+"T. pilulare",1,84,35,65
+"T. pilulare",2,84,29,71
+"T. glomeratum",1,98,58,42
+"T. glomeratum",2,98,47,53
+"T. spumosum",1,98,88,12
+"T. spumosum",2,98,89,11
+"T. hirtum",1,98,54,46
+"T. hirtum",2,98,65,35
+"T. nigrescens",1,98,39,61
+"T. nigrescens",2,98,36,64
+"T. tomentosum",1,98,90,10
+"T. tomentosum",2,98,66,34
+"T. sub sub",1,98,39,61
+"T. sub sub",2,98,36,64
+"T. scutatum",1,98,31,69
+"T. scutatum",2,98,28,72
+"T. pilulare",1,98,48,52
+"T. pilulare",2,98,38,62
+"T. glomeratum",1,118,24,76
+"T. glomeratum",2,118,35,65
+"T. spumosum",1,118,96,4
+"T. spumosum",2,118,74,26
+"T. hirtum",1,118,68,32
+"T. hirtum",2,118,65,35
+"T. nigrescens",1,118,29,71
+"T. nigrescens",2,118,30,70
+"T. tomentosum",1,118,90,10
+"T. tomentosum",2,118,81,19
+"T. sub sub",1,118,29,71
+"T. sub sub",2,118,39,61
+"T. scutatum",1,118,12,88
+"T. scutatum",2,118,15,85
+"T. pilulare",1,118,37,63
+"T. pilulare",2,118,33,67
+"T. glomeratum",1,132,49,51
+"T. glomeratum",2,132,41,59
+"T. spumosum",1,132,82,18
+"T. spumosum",2,132,91,9
+"T. hirtum",1,132,70,30
+"T. hirtum",2,132,69,31
+"T. nigrescens",1,132,17,83
+"T. nigrescens",2,132,38,62
+"T. tomentosum",1,132,72,28
+"T. tomentosum",2,132,71,29
+"T. sub sub",1,132,33,67
+"T. sub sub",2,132,24,76
+"T. scutatum",1,132,12,88
+"T. scutatum",2,132,19,81
+"T. pilulare",1,132,17,83
+"T. pilulare",2,132,28,72
+"T. glomeratum",1,146,45,55
+"T. glomeratum",2,146,38,62
+"T. spumosum",1,146,85,15
+"T. spumosum",2,146,87,13
+"T. hirtum",1,146,64,36
+"T. hirtum",2,146,62,38
+"T. nigrescens",1,146,20,80
+"T. nigrescens",2,146,19,81
+"T. tomentosum",1,146,77,23
+"T. tomentosum",2,146,82,18
+"T. sub sub",1,146,15,85
+"T. sub sub",2,146,32,68
+"T. scutatum",1,146,5,95
+"T. scutatum",2,146,11,89
+"T. pilulare",1,146,3,97
+"T. pilulare",2,146,18,82
+"T. glomeratum",1,160,31,69
+"T. glomeratum",2,160,0,100
+"T. spumosum",1,160,62,38
+"T. spumosum",2,160,57,43
+"T. hirtum",1,160,45,55
+"T. hirtum",2,160,51,49
+"T. nigrescens",1,160,13,87
+"T. nigrescens",2,160,25,75
+"T. tomentosum",1,160,56,44
+"T. tomentosum",2,160,71,29
+"T. sub sub",1,160,10,90
+"T. sub sub",2,160,0,100
+"T. scutatum",1,160,8,92
+"T. scutatum",2,160,5,95
+"T. pilulare",1,160,30,70
+"T. pilulare",2,160,37,63
+"T. glomeratum",1,174,39,61
+"T. glomeratum",2,174,37,63
+"T. glomeratum",3,174,42,58
+"T. glomeratum",4,174,25,75
+"T. spumosum",1,174,78,22
+"T. spumosum",2,174,73,27
+"T. spumosum",3,174,64,36
+"T. spumosum",4,174,65,35
+"T. hirtum",1,174,72,28
+"T. hirtum",2,174,54,46
+"T. hirtum",3,174,49,51
+"T. hirtum",4,174,50,50
+"T. nigrescens",1,174,23,77
+"T. nigrescens",2,174,15,85
+"T. nigrescens",3,174,23,77
+"T. nigrescens",4,174,22,78
+"T. tomentosum",1,174,75,25
+"T. tomentosum",2,174,58,42
+"T. tomentosum",3,174,53,47
+"T. tomentosum",4,174,75,25
+"T. sub sub",1,174,1,99
+"T. sub sub",2,174,0,100
+"T. sub sub",3,174,6,94
+"T. sub sub",4,174,25,75
+"T. scutatum",1,174,4,96
+"T. scutatum",2,174,11,89
+"T. scutatum",3,174,5,95
+"T. scutatum",4,174,5,95
+"T. pilulare",1,174,17,83
+"T. pilulare",2,174,28,72
+"T. pilulare",3,174,,
+"T. pilulare",4,174,,

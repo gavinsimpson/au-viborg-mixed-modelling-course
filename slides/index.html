@@ -1,0 +1,3284 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Applied mixed modelling with R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Gavin Simpson" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="slides.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: inverse, middle, left, my-title-slide, title-slide
+
+.title[
+# Applied mixed modelling with R
+]
+.author[
+### Gavin Simpson
+]
+.institute[
+### Department of Animal &amp; Veterinary Sciences · Aarhus University
+]
+.date[
+### 0930–1600 CET 7<sup>th</sup>–16<sup>th</sup> January 2025
+]
+
+---
+
+class: inverse middle center big-subsection
+
+
+
+# Welcome
+
+???
+
+---
+
+# Logistics
+
+---
+
+# Slides
+
+Slidedeck: [bit.ly/47voask](https://bit.ly/47voask)
+
+Sources: [bit.ly/3udFioi](https://bit.ly/3udFioi)
+
+Direct download a ZIP of everything: [bit.ly/3udFioi](https://bit.ly/3udFioi)
+
+Unpack the zip &amp; remember where you put it
+
+Or `usethis::use_course()`
+
+---
+
+# `use_course()`
+
+
+``` r
+#install.packages("usethis")
+usethis::use_course("https://bit.ly/3uguG86")
+```
+
+---
+
+# You fitted a GLM(M), now what?
+
+This was the main motivation for this course
+
+The original idea was encapsulated in *You fitted a GLM(M), now what?*
+
+---
+
+# Today's topics
+
+* Recap generalised linear models
+
+* Fitting some GLMs
+
+---
+
+# packages
+
+Load the packages we need
+
+
+``` r
+library("dplyr")
+library("readr")
+library("tibble")
+# install.packages("here")
+library("here")
+library("ggplot2")
+```
+
+---
+class: inverse middle center subsection
+
+# GLMs
+
+---
+
+# Generalized linear models
+
+Generalised linear models (GLMs) are an extension of linear regression plus Poisson, logistic and other regression models
+
+GLMs extend the types of data and error distributions that can be modelled beyond the Gaussian data of linear regression
+
+With GLMs we can model count data, binary/presence absence data, and concentration data where the response variable is not continuous.
+
+Such data have different mean-variance relationships and we would not expect errors to be Gaussian.
+
+---
+
+# Generalized linear models
+
+Typical uses of GLMs are
+
+- Poisson GLM for count data
+- Logistic GLM for presence absence data
+- Gamma GLM for non-negative or positive continuous data
+
+GLMs can handle many problems that appear non-linear
+
+Not necessary to transform data as this is handled as part of the GLM process
+
+---
+
+# Binomial distribution
+
+* For a fixed number of trials (*n*),
+* fixed probability of “success” (*p*), &amp;
+* two outcomes per trial (heads or tails)
+
+Flip a coin 10 times with *p* = 0.7, the probability of 7 heads is `\(\sim Bin(n = 10, p = 0.7)\)`, ~ 0.27
+
+
+``` r
+dbinom(x = 7, size = 10, prob = 0.7)
+```
+
+```
+## [1] 0.2668279
+```
+
+---
+
+# Binomial distribution
+
+![](index_files/figure-html/binomial-pdf-1.svg)&lt;!-- --&gt;
+
+---
+
+# Poisson distribution
+
+The Poisson gives the distribution of the number of “things” (individuals, events, counts) in a given sampling interval/effort if each event is **independent**.
+
+Has a single parameter `\(\lambda\)` the average density or arrival rate
+
+---
+
+# Poisson distribution
+
+![](index_files/figure-html/poisson-pdf-1.svg)&lt;!-- --&gt;
+
+---
+
+# The structure of a GLM
+
+.small[
+1. A **Random component**, specifying the conditional distribution of of the response `\(y_i\)` given the values of the explanatory data
+2. A **Linear Predictor** `\(\eta\)` &amp;mdash; the linear function of regressors
+    `$$\eta_i = \alpha + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ik}$$`
+	The `\(x_{ij}\)` are prescribed functions of the explanatory variables and can be transformed variables, dummy variables, polynomial terms, interactions etc.
+3. A smooth and invertible **Link Function** `\(g(\cdot)\)`, which transforms the expectation of the response `\(\mu_i \equiv \mathbb{E}(y_i)\)` to the linear predictor
+    `$$g(\mu_i) = \eta_i = \alpha + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ik}$$`
+    As `\(g(\cdot)\)` is invertible, we can write
+    `$$\mu_i = g^{-1}(\eta_i) = g^{-1}(\alpha + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ik})$$`
+]
+
+---
+
+# Conditional distribution of `\(y_i\)`
+
+Originally GLMs were specified for random components belonging to the *exponential family* of probability distributions
+
+- Continuous probability distributions
+    - Gaussian (or normal distribution; used in linear regression)
+	- Gamma (data with constant coefficient of variation)
+	- Exponential (time to death, survival analysis)
+	- Chi-square
+	- Inverse-Gaussian
+- Discrete probability distributions
+    - Poisson (count data)
+	- Binomial (0/1 data, counts from a total)
+	- Multinomial
+
+Choice depends on range of `\(y_i\)` and on the relationship between the variance and the expectation of `\(y_i\)` &amp;mdash; *mean-variance relationship*
+
+---
+
+# Conditional distribution of `\(y_i\)`
+
+Characteristics of common GLM probability distributions
+
+
+|                  | Canonical Link | Range of `\(Y_i\)`               | Variance function              |
+|------------------|----------------|------------------------------|--------------------------------|
+| Gaussian         | Identity       | `\((-\infty, +\infty)\)`         | `\(\phi\)`                         |
+| Poisson          | Log            | `\(0,1,2,\ldots,\infty\)`        | `\(\mu_i\)`                        |
+| Binomial         | Logit          | `\(\frac{0,1,\ldots,n_i}{n_i}\)` | `\(\frac{\mu_i(1 - \mu_i)}{n_i}\)` |
+| Gamma            | Inverse        | `\((0, \infty)\)`                | `\(\phi \mu_i^2\)`                 |
+| Inverse-Gaussian | Inverse-square | `\((0, \infty)\)`                | `\(\phi \mu_i^3\)`                 |
+
+
+`\(\phi\)` is the dispersion parameter; `\(\mu_i\)` is the expectation of `\(y_i\)`. In the binomial family, `\(n_i\)` is the number of trials
+
+---
+
+# Common probability distributions
+
+Gaussian distribution is rarely adequate in applied science; GLMs offer useful alternatives
+
+.small[
+- **Poisson** &amp;mdash; counts; integers, non-negative, variance increases with mean
+
+- **Binomial** &amp;mdash; observed proportions from a total; integers, non-negative, bounded at 0 and 1, variance largest at `\(\pi = 0.5\)`
+
+- **Binomial** &amp;mdash; presence absence data; discrete values, 0 and 1, models probability of success
+
+- **Gamma** &amp;mdash; concentrations; non-negative (strictly positive with log link) real values, variance increases with mean, many zero values and some high values
+]
+
+---
+
+# Old notation
+
+Wrote linear model as
+
+`$$y_i = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij} + \varepsilon_i$$`
+
+And assumed
+
+$$ \varepsilon_i \sim \text{Normal}(0, \sigma^2) $$
+
+This doesn't work out the same for GLMs &amp;mdash; we don't have residuals in the linear predictor
+
+Sampling variation comes from the response distribution
+
+---
+
+# New notation
+
+Rewrite linear model as
+
+`\begin{align*}
+y_i &amp; \sim \text{Normal}(\mu_i, \sigma^2) \\
+\eta_i &amp; = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
+\end{align*}`
+
+This now matches the general form for the GLM
+
+`\begin{align*}
+y_i &amp; \sim \text{EF}(\mu_i, \boldsymbol{\theta}) \\
+g(\mu_i) &amp; = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
+\end{align*}`
+
+---
+
+# New notation
+
+Binomial GLM
+
+`\begin{align*}
+y_i &amp; \sim \text{Binomial}(n, p_i) \\
+\text{logit}(p_i) &amp; = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
+\end{align*}`
+
+Poisson GLM
+
+`\begin{align*}
+y_i &amp; \sim \text{Poisson}(\lambda_i) \\
+\log(\lambda_i) &amp; = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
+\end{align*}`
+
+---
+class: inverse middle center subsection
+
+# Examples
+
+---
+
+# Logistic regression &amp;mdash; *Darlingtonia*
+
+Timed censuses at 42 randomly-chosen leaves of the cobra lily
+
+.small[
+* Recorded number of wasp visits at 10 of the 42 leaves
+* Test hypothesis that the probability of visitation is related to leaf height
+* Response is dichotomous variable (0/1)
+* A suitable model is the logistic model
+    `$$\pi = \frac{e^{\beta_0 + \beta_i X}}{1 + e^{\beta_0 + \beta_1 X_i}}$$`
+* The logit transformation produces
+    `$$\log_e \left( \frac{\pi}{1-\pi} \right) = \beta_0 + \beta_1 X_i$$`
+* This is the logistic regression and it is a special case of the GLM, with a binomial random component and the logit link function
+]
+
+---
+
+# Logistic regression &amp;mdash; *Darlingtonia*
+
+`$$\log_e \left( \frac{\pi}{1-\pi} \right) = \beta_0 + \beta_1 X_i$$`
+
+.small[
+* `\(\beta_0\)` is a type of intercept; determines the probability of success ( `\(y_i = 1\)` ) `\(\pi\)` where X = 0
+* If `\(\beta_0 = 0\)` then `\(\pi = 0.5\)`
+*  `\(\beta_1\)` is similar to the slope and determines how steeply the fitted logistic curve rises to the maximum value of `\(\pi = 1\)`
+* Together, `\(\beta_0\)` and `\(\beta_1\)` specify the range of the `\(X\)` variable over which most of the rise occurs and determine how quickly the probability rises from 0 to 1
+* Estimate the model parameters using **Maximum Likelihood**; find parameter values that make the observed data most probable
+]
+
+---
+
+# Logistic regression &amp;mdash; *Darlingtonia*
+
+
+``` r
+wasp &lt;- read_csv("data/darlingtonia.csv", comment = "#",
+                 col_types = "dl")
+wasp
+```
+
+
+```
+## # A tibble: 42 × 2
+##    leafHeight visited
+##         &lt;dbl&gt; &lt;lgl&gt;  
+##  1         67 TRUE   
+##  2         84 TRUE   
+##  3         49 TRUE   
+##  4         70 TRUE   
+##  5         77 TRUE   
+##  6         77 TRUE   
+##  7         66 TRUE   
+##  8         65 TRUE   
+##  9         53 TRUE   
+## 10         57 TRUE   
+## # ℹ 32 more rows
+```
+---
+
+# Logistic regression &amp;mdash; *Darlingtonia*
+
+
+``` r
+m &lt;- glm(visited ~ leafHeight, data = wasp, family = binomial)
+m
+```
+
+```
+## 
+## Call:  glm(formula = visited ~ leafHeight, family = binomial, data = wasp)
+## 
+## Coefficients:
+## (Intercept)   leafHeight  
+##     -7.2930       0.1154  
+## 
+## Degrees of Freedom: 41 Total (i.e. Null);  40 Residual
+## Null Deviance:	    46.11 
+## Residual Deviance: 26.96 	AIC: 30.96
+```
+
+---
+
+# Logistic regression &amp;mdash; *Darlingtonia*
+
+.smaller[
+
+``` r
+summary(m)
+```
+
+```
+## 
+## Call:
+## glm(formula = visited ~ leafHeight, family = binomial, data = wasp)
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -7.29295    2.16081  -3.375 0.000738 ***
+## leafHeight   0.11540    0.03655   3.158 0.001591 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 46.105  on 41  degrees of freedom
+## Residual deviance: 26.963  on 40  degrees of freedom
+## AIC: 30.963
+## 
+## Number of Fisher Scoring iterations: 6
+```
+]
+
+---
+
+# Logistic regression &amp;mdash; *Darlingtonia*
+
+.row[
+.col-6[
+.smaller[
+
+``` r
+# data to predict at
+pdat &lt;- with(wasp,
+             tibble(leafHeight = seq(min(leafHeight),
+                                     max(leafHeight),
+                                     length = 100)))
+# predict
+pred &lt;- predict(m, pdat, type = "link", se.fit = TRUE)
+ilink &lt;- family(m)$linkinv # g-1()
+pdat &lt;- pdat |&gt;
+  bind_cols(data.frame(pred)) |&gt;
+  mutate(fitted = ilink(fit),
+         upper = ilink(fit + (2 * se.fit)),
+         lower = ilink(fit - (2 * se.fit)))
+# plot
+ggplot(wasp, aes(x = leafHeight,
+                 y = as.numeric(visited))) +
+    geom_point() +
+    geom_ribbon(aes(ymin = lower, ymax = upper,
+                    x = leafHeight), data = pdat,
+                inherit.aes = FALSE, alpha = 0.2) +
+    geom_line(data = pdat, aes(y = fitted)) +
+    labs(x = "Leaf Height [cm]",
+         y = "Probability of visitation")
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/predict-darlingtonia-1.svg)&lt;!-- --&gt;
+]
+
+]
+
+---
+
+# Wald statistics
+
+`\(z\)` values are Wald statistics, which under the null hypothesis are *asymptotically* standard normal
+
+
+|            | Estimate| Std. Error| z value| Pr(&gt;&amp;#124;z&amp;#124;)|
+|:-----------|--------:|----------:|-------:|------------------:|
+|(Intercept) |  -7.2930|     2.1608| -3.3751|             0.0007|
+|leafHeight  |   0.1154|     0.0365|  3.1575|             0.0016|
+
+&lt;br /&gt;
+Tests the null hypothesis that `\(\beta_i = 0\)`
+`$$z = \hat{\beta}_i / \mathrm{SE}(\hat{\beta}_i)$$`
+
+---
+
+# Deviance
+
+.small[
+* In least squares we have the residual sum of squares as the measure of lack of fitted
+* In GLMs, **deviance** plays the same role
+* Deviance is defined as twice the log likelihood of the observed data under the current model
+* Deviance is defined relative to an arbitrary constant &amp;mdash; only **differences** of deviances have any meaning
+* Differences in deviances are also known as ratios of likelihoods
+* An alternative to the Wald tests are deviance ratio or likelihood ratio tests
+    `$$F = \frac{(D_a - D_b) / (\mathsf{df}_a - \mathsf{df}_b)}{D_b / \mathsf{df}_b}$$`
+* `\(D_j\)` deviance of model, where we test if model A is a significant improvement over model B; `\(\mathsf{df}_k\)` are the degrees of freedom of the respective model
+]
+
+---
+
+# A Gamma GLM &amp;mdash; simple age-depth modelling
+
+Radiocarbon age estimates from depths within a peat bog (Brew &amp; Maddy, 1995, QRA Technical Guide 5)
+
+Estimate accumulation rate; assumption here is linear accumulation
+
+Uncertainty or error is greater at depth; mean variance relationship
+
+Fit mid-depth &amp; mid-calibrated age points
+
+---
+
+# A Gamma GLM &amp;mdash; simple age-depth modelling
+
+
+``` r
+maddy &lt;- read_csv(here("data", "maddy-peat.csv"), col_types = "cdddddd")
+maddy &lt;- mutate(maddy, midDepth = upperDepth - (0.5 * abs(upperDepth - lowerDepth)),
+                calMid = calUpper - (0.5 * abs(calUpper - calLower)))
+maddy
+```
+
+```
+## # A tibble: 12 × 9
+##    Sample upperDepth lowerDepth ageBP ageError calUpper calLower midDepth calMid
+##    &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+##  1 SRR-4…         20       22     355       35      509      307     19     408 
+##  2 SRR-4…         26       28     465       35      542      480     25     511 
+##  3 SRR-4…         32       34     635       35      671      545     31     608 
+##  4 SRR-4…         38       40     740       35      732      666     37     699 
+##  5 SRR-4…         44       46     865       35      916      691     43     804.
+##  6 SRR-4…         50       52.5   870       35      918      692     48.8   805 
+##  7 SRR-4…         56       58     985       35      967      795     55     881 
+##  8 SRR-4…        100      108    1270       35     1284     1097     96    1190.
+##  9 SRR-4…        200      207    2575       35     2761     2558    196.   2660.
+## 10 SRR-4…        260      268    3370       35     3697     3487    256    3592 
+## 11 SRR-4…        400      407    4675       35     5563     5306    396.   5434.
+## 12 SRR-4…        493      500    5315       35     6263     5955    490.   6109
+```
+
+---
+
+# A Gamma GLM &amp;mdash; simple age-depth modelling
+
+.row[
+
+.col-6[
+
+``` r
+ggplot(maddy, aes(x = midDepth, y = calMid)) +
+    geom_point() +
+    labs(y = "Calibrated Age", x = "Depth")
+```
+
+]
+
+.col-6[
+![](index_files/figure-html/plot-maddy-1.svg)&lt;!-- --&gt;
+]
+]
+
+---
+
+# A Gamma GLM
+
+.smaller[
+
+``` r
+m_gamma &lt;- glm(calMid ~ midDepth, data = maddy, family = Gamma(link = "identity"))
+summary(m_gamma)
+```
+
+```
+## 
+## Call:
+## glm(formula = calMid ~ midDepth, family = Gamma(link = "identity"), 
+##     data = maddy)
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 197.2909    22.5603   8.745 5.35e-06 ***
+## midDepth     12.5799     0.4543  27.693 8.74e-11 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for Gamma family taken to be 0.004612561)
+## 
+##     Null deviance: 10.439047  on 11  degrees of freedom
+## Residual deviance:  0.048316  on 10  degrees of freedom
+## AIC: 145.57
+## 
+## Number of Fisher Scoring iterations: 4
+```
+]
+
+---
+
+# A Gamma GLM
+
+.row[
+
+.col-6[
+.smaller[
+
+``` r
+# data to predict at
+pdat &lt;- with(maddy,
+             tibble(midDepth = seq(min(midDepth),
+                                   max(midDepth),
+                                   length = 100)))
+# predict
+p_gamma &lt;- predict(m_gamma, pdat, type = "link",
+                   se.fit = TRUE)
+ilink &lt;- family(m_gamma)$linkinv
+# confidence interval
+p_gamma &lt;- pdat %&gt;%
+  bind_cols(data.frame(p_gamma)) %&gt;%
+  mutate(fitted = ilink(fit),
+         upper = ilink(fit + (2 * se.fit)),
+         lower = ilink(fit - (2 * se.fit)))
+# plot
+p1 &lt;- ggplot(maddy, aes(x = midDepth, y = calMid)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper,
+                    x = midDepth), data = p_gamma,
+                inherit.aes = FALSE, alpha = 0.2) +
+    geom_line(data = p_gamma, aes(y = fitted)) +
+    geom_point() +
+    labs(y = "Calibrated Age", x = "Depth",
+         title = "Gamma GLM")
+p1
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/plot-maddy-fitted-gamma-1.svg)&lt;!-- --&gt;
+
+]
+]
+
+---
+
+# A Gaussian GLM
+
+.row[
+
+.col-6[
+.smaller[
+
+``` r
+# fit gaussian GLM
+m_gaus &lt;- glm(calMid ~ midDepth, data = maddy,
+              family = gaussian)
+# predict
+p_gaus &lt;- predict(m_gaus, pdat, type = "link",
+                  se.fit = TRUE)
+ilink &lt;- family(m_gaus)$linkinv
+# prep confidence interval
+p_gaus &lt;- pdat %&gt;%
+  bind_cols(data.frame(p_gaus)) %&gt;%
+  mutate(fitted = ilink(fit),
+         upper = ilink(fit + (2 * se.fit)),
+         lower = ilink(fit - (2 * se.fit)))
+# plot
+p2 &lt;- ggplot(maddy, aes(x = midDepth, y = calMid)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper,
+                    x = midDepth), data = p_gaus,
+                inherit.aes = FALSE, alpha = 0.2) +
+    geom_line(data = p_gaus, aes(y = fitted)) +
+    geom_point() +
+    labs(y = "Calibrated Age",
+         x = "Depth",
+         title = "Linear Model")
+p2
+```
+
+]
+]
+
+.col-6[
+![](index_files/figure-html/plot-maddy-fitted-gaussian-1.svg)&lt;!-- --&gt;
+
+]
+]
+
+---
+
+
+``` r
+library("patchwork")
+p1 + p2
+```
+
+![](index_files/figure-html/unnamed-chunk-4-1.svg)&lt;!-- --&gt;
+
+---
+
+# Transform or GLM?
+
+```
+m1 &lt;- glm(log(y) ~ x, data = my_data, family = Gamma(link = "identity"))
+
+m2 &lt;- glm(y ~ x, data = my_data, family = Gamma(link = "log"))
+```
+
+These models are different
+
+1. `m1` is a model for `\(\mathbb{E}(\log(y_i))\)`
+2. `m2` is a model for `\(\mathbb{E}(y_i)\)`
+
+$$
+\log(\mathbb{E}(y_i)) \neq \mathbb{E}(\log(y_i))
+$$
+
+Jensen's inequality
+
+---
+
+# Biological control of diamondback moths
+
+.small[
+Uefune et al (2020) studied the use of synthetic herbivory-induced plant volatiles (HIPVs) to attract larval parasitoid wasps (*Plutella xylostella*) to control diamondback moths (DBM: *Cotesia vestalis*), a global pest of cruciferous vegetables, in greenhouses growing mizuna (Japanese mustard) in Japan.
+
+They used two groups of greenhouses, the treated group having dispensers for the HIPVs as well as honeyfeeders to attract *C. vestalis* and a second untreated group. In each greenhouse, a single sticky trap, replaced weekly over 6 months, was used to catch both DBMs and *C. vestalis* and the numbers of both counted.
+
+We will model numbers of *C. vestalis* against numbers of DBM and treatment using each trap as the units of analysis. The study was done in 2006 and 2008 but we only analyze the 2008 data.
+]
+
+???
+
+While greenhouse ID could have been included as a random effect in a mixed model analysis, the available data did not record individual greenhouses.
+
+---
+
+# Biological control of diamondback moths
+
+&gt; We will model numbers of *C. vestalis* against numbers of DBM and treatment using each trap as the units of analysis.
+
+What distribution would you expect the response variable parasitoid to follow?
+
+---
+
+# Diamondback moths &amp;mdash; data
+
+
+``` r
+moth &lt;- readr::read_csv("data/uefunex.csv")
+```
+
+
+---
+
+# Diamondback moths &amp;mdash; summary stats
+
+
+``` r
+library("dplyr")
+moth |&gt;
+    group_by(treatment) |&gt;
+    summarise(n = n(), mean = mean(parasitoid), median = median(parasitoid),
+        sd = sd(parasitoid))
+```
+
+```
+## # A tibble: 2 × 5
+##   treatment     n  mean median    sd
+##   &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+## 1 control     177 1.10       0  4.06
+## 2 treated     242 0.938      0  2.87
+```
+
+---
+
+# Diamondback moths &amp;mdash; plot data
+
+
+``` r
+library("ggplot2")
+moth |&gt;
+    ggplot(aes(x = treatment, y = parasitoid)) +
+    geom_violin(aes(fill = treatment))
+```
+
+&lt;img src="index_files/figure-html/plot-moth-1-1.svg" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Diamondback moths
+
+
+``` r
+moth |&gt;
+    ggplot(aes(x = treatment, y = parasitoid)) +
+    geom_violin(aes(fill = treatment)) +
+    scale_y_sqrt()
+```
+
+&lt;img src="index_files/figure-html/plot-moth-sqrt-1.svg" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Diamondback moths
+
+
+``` r
+# install.packages("ggforce")
+moth |&gt;
+    ggplot(aes(x = treatment, y = parasitoid)) +
+    geom_violin(aes(fill = treatment)) +
+    scale_y_continuous(trans = ggforce::power_trans((1/4)))
+```
+
+&lt;img src="index_files/figure-html/plot-moth-root-root-1.svg" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Biological control of diamondback moths
+
+What do you conclude about the response variable?
+
+What distribution would you expect the response variable parasitoid to follow?
+
+---
+
+# Fit Poisson GLM
+
+
+``` r
+moth_glm1 &lt;- glm(parasitoid ~ moth + treatment + moth:treatment,
+    family = poisson, data = moth)
+```
+
+---
+
+# Poisson GLM summary
+
+
+``` r
+summary(moth_glm1)
+```
+
+```
+## 
+## Call:
+## glm(formula = parasitoid ~ moth + treatment + moth:treatment, 
+##     family = poisson, data = moth)
+## 
+## Coefficients:
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)           -0.30106    0.08804  -3.420 0.000627 ***
+## moth                   0.22652    0.01433  15.804  &lt; 2e-16 ***
+## treatmenttreated      -0.13617    0.11899  -1.144 0.252463    
+## moth:treatmenttreated  0.18471    0.02597   7.111 1.15e-12 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for poisson family taken to be 1)
+## 
+##     Null deviance: 1600.0  on 418  degrees of freedom
+## Residual deviance: 1220.5  on 415  degrees of freedom
+## AIC: 1551.3
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+---
+
+# Analysis of deviance table
+
+
+``` r
+anova(moth_glm1, test = "LRT")
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model: poisson, link: log
+## 
+## Response: parasitoid
+## 
+## Terms added sequentially (first to last)
+## 
+## 
+##                Df Deviance Resid. Df Resid. Dev  Pr(&gt;Chi)    
+## NULL                             418     1600.0              
+## moth            1   328.17       417     1271.9 &lt; 2.2e-16 ***
+## treatment       1     5.78       416     1266.1   0.01623 *  
+## moth:treatment  1    45.62       415     1220.5 1.434e-11 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+---
+
+# Plot the estimated model
+
+.row[
+
+.col-6[
+.small[
+
+``` r
+moth |&gt;
+    ggplot(aes(y = parasitoid, x = moth, color = treatment)) +
+    geom_jitter(stat = "identity", width = 0.05, height = 0.05) +
+    geom_smooth(method = "glm", method.args = list(family = "poisson")) +
+    theme(legend.position = "bottom")
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/plot-moth-glm1-1.svg)&lt;!-- --&gt;
+]
+]
+
+---
+
+# Problems
+
+
+``` r
+library("dplyr")
+moth |&gt;
+    group_by(treatment) |&gt;
+    summarise(n = n(), mean = mean(parasitoid), median = median(parasitoid),
+        sd = sd(parasitoid))
+```
+
+```
+## # A tibble: 2 × 5
+##   treatment     n  mean median    sd
+##   &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+## 1 control     177 1.10       0  4.06
+## 2 treated     242 0.938      0  2.87
+```
+
+---
+
+# Overdispersion
+
+
+``` r
+presid &lt;- resid(moth_glm1, type = "pearson")
+n &lt;- nrow(moth)
+params &lt;- length(coef(moth_glm1))
+disp &lt;- sum(presid^2) / (n - params)
+disp
+```
+
+```
+## [1] 7.711486
+```
+
+---
+
+# Overdispersion
+
+
+``` r
+moth_glm2 &lt;- glm(parasitoid ~ moth + treatment + moth:treatment,
+    family = quasipoisson, data = moth)
+
+summary(moth_glm2)
+```
+
+```
+## 
+## Call:
+## glm(formula = parasitoid ~ moth + treatment + moth:treatment, 
+##     family = quasipoisson, data = moth)
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           -0.30106    0.24450  -1.231   0.2189    
+## moth                   0.22652    0.03981   5.691  2.4e-08 ***
+## treatmenttreated      -0.13617    0.33046  -0.412   0.6805    
+## moth:treatmenttreated  0.18471    0.07214   2.561   0.0108 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for quasipoisson family taken to be 7.71271)
+## 
+##     Null deviance: 1600.0  on 418  degrees of freedom
+## Residual deviance: 1220.5  on 415  degrees of freedom
+## AIC: NA
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+---
+
+# Negative binomial
+
+
+``` r
+library("mgcv")
+moth_glm3 &lt;- gam(parasitoid ~ moth + treatment + moth * treatment,
+    family = nb(), method = "ML", data = moth)
+summary(moth_glm3)
+```
+
+```
+## 
+## Family: Negative Binomial(0.263) 
+## Link function: log 
+## 
+## Formula:
+## parasitoid ~ moth + treatment + moth * treatment
+## 
+## Parametric coefficients:
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)            -0.7326     0.1897  -3.861 0.000113 ***
+## moth                    0.5445     0.0731   7.448 9.44e-14 ***
+## treatmenttreated        0.1632     0.2460   0.663 0.507015    
+## moth:treatmenttreated   0.0400     0.1379   0.290 0.771761    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## 
+## R-sq.(adj) =   -116   Deviance explained = 22.5%
+## -ML = 458.89  Scale est. = 1         n = 419
+```
+
+---
+class: inverse middle center subsection
+
+# Better coffee-growing
+
+---
+
+# Better coffee-growing
+
+.small[
+Caudill and Rice (2012) examined the effectiveness of methods for making agriculture and habitat preservation more compatible, specifically assessing whether protocols for “Biodiversity-Friendly” coffee growing resulted in positive outcomes for mammals.
+
+They compared four habitats, forest, Bird Friendly® shade, conventional shade, and sun coffee, and used a combination of Sherman traps and camera traps to count mammals and assess species richness. Each habitat was represented by multiple sites, with 23 total sites monitored. At each site, they also recorded a series of plant habitat variables, such as cover at canopy, mid- and lower-strata, and ground level, tree basal area.
+
+They were interested primarily in differences between habitats, but also the role of vegetation characteristics in influencing mammal diversity. We focus on this latter relationship.
+]
+
+---
+
+# Better coffee-growing
+
+Read in the data
+
+
+``` r
+coffee &lt;- readr::read_csv("data/caudill.csv")
+```
+
+
+Forest habitat has no coffee trees, and low tree richness, so habitat variables not all present. Create subset of this data
+
+
+``` r
+coffee &lt;- coffee |&gt;
+    dplyr::filter(habitat != "Forest")
+```
+
+We will consider the number of small individuals
+
+---
+
+# Better coffee-growing
+
+
+``` r
+coffee_glm &lt;- glm(specdens_small ~ canopy + midstrata + lowstrata + groundcov +
+        treerichness + treeheight + coffeeheight,
+    data = coffee, family = poisson)
+summary(coffee_glm)
+```
+
+```
+## 
+## Call:
+## glm(formula = specdens_small ~ canopy + midstrata + lowstrata + 
+##     groundcov + treerichness + treeheight + coffeeheight, family = poisson, 
+##     data = coffee)
+## 
+## Coefficients:
+##                Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept)   0.3978215  1.2950566   0.307    0.759
+## canopy        0.0138808  0.0113050   1.228    0.220
+## midstrata     0.0074660  0.0171259   0.436    0.663
+## lowstrata     0.0009023  0.0124781   0.072    0.942
+## groundcov    -0.0128356  0.0112276  -1.143    0.253
+## treerichness -0.0688056  0.0808299  -0.851    0.395
+## treeheight   -0.0404793  0.0367857  -1.100    0.271
+## coffeeheight  0.3171539  0.7041983   0.450    0.652
+## 
+## (Dispersion parameter for poisson family taken to be 1)
+## 
+##     Null deviance: 14.6241  on 17  degrees of freedom
+## Residual deviance:  6.5568  on 10  degrees of freedom
+## AIC: 67.605
+## 
+## Number of Fisher Scoring iterations: 5
+```
+
+---
+
+# Why do gnus die?
+
+Sinclair and Arcese (1995) were interested in the causes (predation or other) of death of wildebeeste, more specifically whether predation varied with sex and health of animals. They addressed the question by examining carcasses, and they cross-classified 226 wildebeest carcasses from the Serengeti by three variables: sex (male, female), cause of death (predation, non-predation) and bone marrow type (SWF: solid white fatty; OG: opaque gelatinous; TG: translucent gelatinous; with the first indicating a healthy animal which is not undernourished).
+
+
+``` r
+gnu &lt;- readr::read_csv("data/sinclair.csv")
+```
+
+
+---
+
+# Why do gnus die?
+
+The 226 carcasses each could be placed into one of 12 cells of a 2 x 2 x 3 table, and we could model the cell count
+
+
+``` r
+xtabs(gnus ~ death + sex + marrow, data = gnu)
+```
+
+```
+## , , marrow = OG
+## 
+##            sex
+## death        F  M
+##   Other     26 12
+##   Predation 32 43
+## 
+## , , marrow = SWF
+## 
+##            sex
+## death        F  M
+##   Other      6  7
+##   Predation 26 14
+## 
+## , , marrow = TG
+## 
+##            sex
+## death        F  M
+##   Other     16 26
+##   Predation  8 10
+```
+
+---
+
+# Log-linear model
+
+Fit a saturated log-linear model
+
+
+``` r
+gnu_glm1 &lt;- glm(gnus ~ death * sex * marrow,
+    data = gnu, family = poisson)
+```
+
+---
+
+# Log-linear model
+
+
+``` r
+anova(gnu_glm1, test = "Chisq")
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model: poisson, link: log
+## 
+## Response: gnus
+## 
+## Terms added sequentially (first to last)
+## 
+## 
+##                  Df Deviance Resid. Df Resid. Dev  Pr(&gt;Chi)    
+## NULL                                11     76.950              
+## death             1   7.1171        10     69.833  0.007635 ** 
+## sex               1   0.0177         9     69.815  0.894163    
+## marrow            2  27.0529         7     42.763 1.335e-06 ***
+## death:sex         1   0.0866         6     42.676  0.768531    
+## death:marrow      2  29.5199         4     13.156 3.889e-07 ***
+## sex:marrow        2   5.9677         2      7.188  0.050599 .  
+## death:sex:marrow  2   7.1883         0      0.000  0.027484 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+---
+
+# Log-linear model
+
+
+``` r
+drop1(gnu_glm1)
+```
+
+```
+## Single term deletions
+## 
+## Model:
+## gnus ~ death * sex * marrow
+##                  Df Deviance    AIC
+## &lt;none&gt;                0.0000 79.226
+## death:sex:marrow  2   7.1883 82.414
+```
+
+---
+
+# Log-linear model
+
+
+``` r
+gnu_glm2 &lt;- glm(gnus ~ death + sex + marrow +
+        death:sex + death:marrow + sex:marrow,
+    data = gnu, family = poisson)
+
+anova(gnu_glm1, gnu_glm2, test = "LRT")
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model 1: gnus ~ death * sex * marrow
+## Model 2: gnus ~ death + sex + marrow + death:sex + death:marrow + sex:marrow
+##   Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)  
+## 1         0     0.0000                       
+## 2         2     7.1883 -2  -7.1883  0.02748 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+---
+
+# Log-linear model
+
+This model can be more succinctly specified using the `^` operator
+
+
+``` r
+gnu_glm2 &lt;- glm(gnus ~ death + sex + marrow +
+        death:sex + death:marrow + sex:marrow,
+    data = gnu, family = poisson)
+```
+
+
+``` r
+gnu_glm2a &lt;- glm(gnus ~ (death + sex + marrow)^2,
+    data = gnu, family = poisson)
+
+all.equal(coef(gnu_glm2), coef(gnu_glm2a))
+```
+
+```
+## [1] TRUE
+```
+
+
+---
+class: inverse middle center subsection
+
+# Model diagnostics
+
+---
+
+# Model diagnostics
+
+
+``` r
+moth_glm1 |&gt; plot()
+```
+
+![](index_files/figure-html/unnamed-chunk-18-1.svg)&lt;!-- --&gt;![](index_files/figure-html/unnamed-chunk-18-2.svg)&lt;!-- --&gt;![](index_files/figure-html/unnamed-chunk-18-3.svg)&lt;!-- --&gt;![](index_files/figure-html/unnamed-chunk-18-4.svg)&lt;!-- --&gt;
+
+---
+
+# DHARMa &amp;mdash; alternate diagnostics
+
+The {DHARMa} 📦 by Florian Hartig provides additional diagnostics for a wide range of models
+
+DHARMa generates randomised quantile residuals from models
+
+Randomised quantile residuals are uniformly distributed
+
+These residuals are then used in model diagnostics
+
+---
+
+# DHARMa &amp;mdash; alternate diagnostics
+
+1. Simulate new response data from the fitted model for each observation.
+
+2. For each observation, calculate the empirical cumulative distribution function (ECDF) for the simulated observations, which describes the possible values at the predictor combination of the observed value, assuming the fitted model is correct.
+
+3. The residual is then defined as the value of the ECDF at the value of the observed data, so a residual of 0 means that all simulated values are larger than the observed value, and a residual of 0.5 means half of the simulated values are larger than the observed value.
+
+---
+
+# DHARMa &amp;mdash; alternate diagnostics
+
+&lt;img src="resources/dharma-residuals.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# DHARMa &amp;mdash; over dispersion
+
+A quick test for over dispersion is given by `testDispersion()`
+
+For the Poisson GLM for the Moth data:
+
+
+``` r
+library("mgcViz")
+library("DHARMa")
+
+testDispersion(moth_glm1, plot = FALSE)
+```
+
+```
+## 
+## 	DHARMa nonparametric dispersion test via sd of residuals fitted vs.
+## 	simulated
+## 
+## data:  simulationOutput
+## dispersion = 10.276, p-value &lt; 2.2e-16
+## alternative hypothesis: two.sided
+```
+
+---
+
+# DHARMa &amp;mdash; over dispersion
+
+A quick test for over dispersion is given by `testDispersion()`
+
+For the Negative binomial GLM fitted to the Moth data:
+
+
+``` r
+testDispersion(moth_glm3, plot = FALSE)
+```
+
+```
+## 
+## 	DHARMa nonparametric dispersion test via sd of residuals fitted vs.
+## 	simulated
+## 
+## data:  simulationOutput
+## dispersion = 0.29578, p-value = 0.896
+## alternative hypothesis: two.sided
+```
+
+---
+
+# DHARMa &amp;mdash; randomised quantile residuals
+
+To generate just the randomised quantile residuals we use `simulateResiduals()`
+
+Do this to compute and store the residuals once, rather than for each test
+
+
+``` r
+resids &lt;- simulateResiduals(fittedModel = moth_glm1, plot = FALSE)
+```
+
+---
+
+# DHARMa &amp;mdash; randomised quantile residuals
+
+
+``` r
+plot(resids)
+```
+
+&lt;img src="index_files/figure-html/dharma-plots-possion-1.svg" width="90%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# DHARMa &amp;mdash; randomised quantile residuals
+
+
+``` r
+resids &lt;- simulateResiduals(fittedModel = moth_glm3, plot = FALSE)
+plot(resids)
+```
+
+&lt;img src="index_files/figure-html/dharma-plots-negbin-1.svg" width="90%" style="display: block; margin: auto;" /&gt;
+
+---
+class: inverse middle center subsection
+
+# Marginal effects
+
+---
+
+# Regression coefficients
+
+&lt;img src="resources/slider-switch-annotated-80.jpg" width="2561" /&gt;
+
+Terms in models are like sliders and switches
+
+* *sliders* represent continuous variables
+* *switches* represent categorical variables
+
+---
+
+# Regression coefficients
+
+
+``` r
+# install.packages("palmerpenguins")
+library("palmerpenguins")
+library("tidyr")
+penguins &lt;- penguins |&gt; drop_na()
+
+model_slider &lt;- lm(body_mass_g ~ flipper_length_mm, data = penguins)
+model_switch &lt;- lm(body_mass_g ~ species, data = penguins)
+```
+
+1. `model_slider` includes the effect of a continuous variable
+2. `model_switch` includes the effect of a categorical variable
+
+---
+
+# Regression coefficients
+
+
+``` r
+library("broom")
+tidy(model_slider)
+```
+
+```
+## # A tibble: 2 × 5
+##   term              estimate std.error statistic   p.value
+##   &lt;chr&gt;                &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)        -5872.     310.       -18.9 1.18e- 54
+## 2 flipper_length_mm     50.2      1.54      32.6 3.13e-105
+```
+
+``` r
+tidy(model_switch)
+```
+
+```
+## # A tibble: 3 × 5
+##   term             estimate std.error statistic   p.value
+##   &lt;chr&gt;               &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)        3706.       38.1    97.2   6.88e-245
+## 2 speciesChinstrap     26.9      67.7     0.398 6.91e-  1
+## 3 speciesGentoo      1386.       56.9    24.4   1.01e- 75
+```
+
+---
+
+# Regression coefficients
+
+
+``` r
+tidy(model_slider)
+```
+
+```
+## # A tibble: 2 × 5
+##   term              estimate std.error statistic   p.value
+##   &lt;chr&gt;                &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)        -5872.     310.       -18.9 1.18e- 54
+## 2 flipper_length_mm     50.2      1.54      32.6 3.13e-105
+```
+
+`flipper_length_mm` is a continuous variable, so it's a slider
+
+As `flipper_length_mm` increases by 1 mm, penguin `body_mass_g` increases by 50.2 grams
+
+---
+
+# Regression coefficients
+
+
+``` r
+tidy(model_switch)
+```
+
+```
+## # A tibble: 3 × 5
+##   term             estimate std.error statistic   p.value
+##   &lt;chr&gt;               &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)        3706.       38.1    97.2   6.88e-245
+## 2 speciesChinstrap     26.9      67.7     0.398 6.91e-  1
+## 3 speciesGentoo      1386.       56.9    24.4   1.01e- 75
+```
+
+`Species` is a categorical variable, so it's a switch
+
+There are three possible values: `Adelie`, `Chinstrap`, `Gentoo`
+
+`Adelie` is the reference category
+
+`Chinstrap` penguins are 26.9 grams heavier than `Adelie`
+
+`Gentoo` penguins are 1386.3 grams heavier than `Adelie`!
+
+---
+
+# Mixers
+
+&lt;img src="resources/mixer-board-annotated-80.jpg" width="2561" /&gt;
+
+Most models aren't so simple
+
+We're often working with multiple variables combining switches and sliders
+
+---
+
+# Mixers
+
+.small[
+
+``` r
+model_mixer &lt;- lm(body_mass_g ~ flipper_length_mm + bill_depth_mm + species + sex,
+                  data = penguins)
+tidy(model_mixer)
+```
+
+```
+## # A tibble: 6 × 5
+##   term              estimate std.error statistic  p.value
+##   &lt;chr&gt;                &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)        -1212.     568.       -2.13 3.36e- 2
+## 2 flipper_length_mm     17.5      2.87      6.12 2.66e- 9
+## 3 bill_depth_mm         74.4     19.7       3.77 1.91e- 4
+## 4 speciesChinstrap     -78.9     45.5      -1.73 8.38e- 2
+## 5 speciesGentoo       1154.     119.        9.73 8.02e-20
+## 6 sexmale              435.      44.8       9.72 8.79e-20
+```
+]
+
+The values in `estimate` are partial effects showing what happens when we change the value of the variable
+
+* for continuous variables the change is 1 unit; 1mm
+* for categorical variables the change is moving *from* the reference category by flicking the switch
+
+As these are partial effects (changes), we need to add "holding all other variables constant"
+
+---
+
+# Damned terminology
+
+A *marginal effect* is a partial derivative from a regression equation
+
+* the change in `\(y\)` for a unit change in one of the model terms
+
+This also applies to categorical terms as formally (with treatment coding) we're changing 1 unit (0 to 1) when we flick the switch
+
+Others use the *conditional effect* or *group constrast* for the effects concerning categorical variables
+
+---
+
+# Load marginaleffects
+
+
+``` r
+library("marginaleffects")
+```
+
+---
+
+# Averaging
+
+Returning to the *Why do gnus die?* example
+
+
+``` r
+broom::tidy(gnu_glm1)
+```
+
+```
+## # A tibble: 12 × 5
+##    term                          estimate std.error statistic  p.value
+##    &lt;chr&gt;                            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+##  1 (Intercept)                      3.26      0.196    16.6   5.60e-62
+##  2 deathPredation                   0.208     0.264     0.786 4.32e- 1
+##  3 sexM                            -0.773     0.349    -2.22  2.67e- 2
+##  4 marrowSWF                       -1.47      0.453    -3.24  1.21e- 3
+##  5 marrowTG                        -0.486     0.318    -1.53  1.27e- 1
+##  6 deathPredation:sexM              1.07      0.420     2.55  1.09e- 2
+##  7 deathPredation:marrowSWF         1.26      0.524     2.40  1.64e- 2
+##  8 deathPredation:marrowTG         -0.901     0.507    -1.78  7.57e- 2
+##  9 sexM:marrowSWF                   0.927     0.657     1.41  1.58e- 1
+## 10 sexM:marrowTG                    1.26      0.472     2.67  7.66e- 3
+## 11 deathPredation:sexM:marrowSWF   -1.84      0.772    -2.39  1.70e- 2
+## 12 deathPredation:sexM:marrowTG    -1.33      0.709    -1.88  6.04e- 2
+```
+
+What is the effect of `death`?
+
+---
+
+# Averaging
+
+We could average the partial derivatives (slopes) for the observed data where for each observation we compare the predicted value with &amp; without the `death` switch flicked
+
+.row[
+
+.col-6[
+
+.small[
+
+``` r
+gnu
+```
+
+```
+## # A tibble: 12 × 4
+##    death     sex   marrow  gnus
+##    &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;  &lt;dbl&gt;
+##  1 Predation F     SWF       26
+##  2 Predation F     OG        32
+##  3 Predation F     TG         8
+##  4 Predation M     SWF       14
+##  5 Predation M     OG        43
+##  6 Predation M     TG        10
+##  7 Other     F     SWF        6
+##  8 Other     F     OG        26
+##  9 Other     F     TG        16
+## 10 Other     M     SWF        7
+## 11 Other     M     OG        12
+## 12 Other     M     TG        26
+```
+]
+
+]
+
+.col-6[
+
+.small[
+
+``` r
+gnu_glm1 |&gt; slopes(variable = "death")
+```
+
+```
+## 
+##  Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %
+##        20       5.66  3.536  &lt; 0.001 11.3   8.91  31.09
+##         6       7.62  0.788  0.43079  1.2  -8.93  20.93
+##        -8       4.90 -1.633  0.10247  3.3 -17.60   1.60
+##         7       4.58  1.528  0.12663  3.0  -1.98  15.98
+##        31       7.42  4.180  &lt; 0.001 15.1  16.46  45.54
+##       -16       6.00 -2.667  0.00766  7.0 -27.76  -4.24
+##        20       5.66  3.536  &lt; 0.001 11.3   8.91  31.09
+##         6       7.62  0.788  0.43079  1.2  -8.93  20.93
+##        -8       4.90 -1.633  0.10247  3.3 -17.60   1.60
+##         7       4.58  1.528  0.12663  3.0  -1.98  15.98
+##        31       7.42  4.180  &lt; 0.001 15.1  16.46  45.54
+##       -16       6.00 -2.667  0.00766  7.0 -27.76  -4.24
+## 
+## Term: death
+## Type:  response 
+## Comparison: Predation - Other
+## Columns: rowid, term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted, gnus, death, sex, marrow
+```
+]
+]
+]
+
+---
+
+# Averaging: step 1
+
+Create the data we need; two copies of the observed data, with `death` set to
+
+1. `"Predation"`, and
+2. `"Other"` respectively
+
+.row[
+
+.col-6[
+
+.small[
+
+``` r
+(df_predation &lt;- datagridcf(model = gnu_glm1, death = "Predation"))
+```
+
+```
+##    rowidcf gnus sex marrow     death
+## 1        1   26   F    SWF Predation
+## 2        2   32   F     OG Predation
+## 3        3    8   F     TG Predation
+## 4        4   14   M    SWF Predation
+## 5        5   43   M     OG Predation
+## 6        6   10   M     TG Predation
+## 7        7    6   F    SWF Predation
+## 8        8   26   F     OG Predation
+## 9        9   16   F     TG Predation
+## 10      10    7   M    SWF Predation
+## 11      11   12   M     OG Predation
+## 12      12   26   M     TG Predation
+```
+]
+
+]
+
+.col-6[
+
+.small[
+
+``` r
+(df_other &lt;- datagridcf(model = gnu_glm1, death = "Other"))
+```
+
+```
+##    rowidcf gnus sex marrow death
+## 1        1   26   F    SWF Other
+## 2        2   32   F     OG Other
+## 3        3    8   F     TG Other
+## 4        4   14   M    SWF Other
+## 5        5   43   M     OG Other
+## 6        6   10   M     TG Other
+## 7        7    6   F    SWF Other
+## 8        8   26   F     OG Other
+## 9        9   16   F     TG Other
+## 10      10    7   M    SWF Other
+## 11      11   12   M     OG Other
+## 12      12   26   M     TG Other
+```
+]
+
+]
+
+]
+
+---
+
+# Averaging: step 2
+
+Predict from the model for both data sets `type = "response"`
+
+
+``` r
+p_predation &lt;- predict(gnu_glm1, newdata = df_predation, type = "response")
+p_other &lt;- predict(gnu_glm1, newdata = df_other, type = "response")
+
+p_predation
+```
+
+```
+##  1  2  3  4  5  6  7  8  9 10 11 12 
+## 26 32  8 14 43 10 26 32  8 14 43 10
+```
+
+``` r
+p_other
+```
+
+```
+##  1  2  3  4  5  6  7  8  9 10 11 12 
+##  6 26 16  7 12 26  6 26 16  7 12 26
+```
+
+---
+
+# Averaging: step 3
+
+Flick the switch!
+
+Subtracting one set of predictions from the other tells us the effect of moving from `death == "Predation"` to `death == "Other"`
+
+
+``` r
+p_predation - p_other
+```
+
+```
+##   1   2   3   4   5   6   7   8   9  10  11  12 
+##  20   6  -8   7  31 -16  20   6  -8   7  31 -16
+```
+
+---
+
+# Averaging: step 4
+
+Take the mean (average) of the effects of moving from `death == "Predation"` to `death == "Other"`
+
+
+``` r
+mean(p_predation - p_other)
+```
+
+```
+## [1] 6.666667
+```
+
+---
+
+# The heck!
+
+Thankfully the *marginaleffects* package has us covered
+
+
+``` r
+library("marginaleffects")
+gnu_glm1 |&gt; avg_slopes(variable = "death")
+```
+
+```
+## 
+##  Estimate Std. Error    z Pr(&gt;|z|)   S 2.5 % 97.5 %
+##      6.67       2.51 2.66   0.0078 7.0  1.76   11.6
+## 
+## Term: death
+## Type:  response 
+## Comparison: Predation - Other
+## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted
+```
+
+Can also call this a comparison if you prefer
+
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(variables = "death")
+```
+
+```
+## 
+##  Estimate Std. Error    z Pr(&gt;|z|)   S 2.5 % 97.5 %
+##      6.67       2.51 2.66   0.0078 7.0  1.76   11.6
+## 
+## Term: death
+## Type:  response 
+## Comparison: Predation - Other
+## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted
+```
+
+---
+
+# Comparisons
+
+.small[
+
+``` r
+gnu_glm1 |&gt; comparisons(variable = "death")
+```
+
+```
+## 
+##  Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %
+##        20       5.66  3.536  &lt; 0.001 11.3   8.91  31.09
+##         6       7.62  0.788  0.43079  1.2  -8.93  20.93
+##        -8       4.90 -1.633  0.10247  3.3 -17.60   1.60
+##         7       4.58  1.528  0.12663  3.0  -1.98  15.98
+##        31       7.42  4.180  &lt; 0.001 15.1  16.46  45.54
+##       -16       6.00 -2.667  0.00766  7.0 -27.76  -4.24
+##        20       5.66  3.536  &lt; 0.001 11.3   8.91  31.09
+##         6       7.62  0.788  0.43079  1.2  -8.93  20.93
+##        -8       4.90 -1.633  0.10247  3.3 -17.60   1.60
+##         7       4.58  1.528  0.12663  3.0  -1.98  15.98
+##        31       7.42  4.180  &lt; 0.001 15.1  16.46  45.54
+##       -16       6.00 -2.667  0.00766  7.0 -27.76  -4.24
+## 
+## Term: death
+## Type:  response 
+## Comparison: Predation - Other
+## Columns: rowid, term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted, gnus, death, sex, marrow
+```
+]
+
+---
+
+# All variables at once
+
+
+``` r
+gnu_glm1 |&gt; avg_slopes()
+```
+
+```
+## 
+##    Term          Contrast Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 %
+##  death  Predation - Other    6.667       2.51  2.661   0.0078  7.0   1.76
+##  marrow SWF - OG           -15.000       3.22 -4.657   &lt;0.001 18.2 -21.31
+##  marrow TG - OG            -13.250       3.29 -4.030   &lt;0.001 14.1 -19.69
+##  sex    M - F               -0.333       2.51 -0.133   0.8942  0.2  -5.24
+##  97.5 %
+##   11.58
+##   -8.69
+##   -6.81
+##    4.58
+## 
+## Type:  response 
+## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+
+We are **averaging** over the effects of the other variables in the model when we do this
+
+---
+
+# Marginal effect at the mean
+
+Another way to estimate the "effect" of `death` is to ask
+
+&gt; What is the effect of changing from `"Other"` to `"Predation"` if we hold the other variables at their means?
+
+(For a categorical variable this means at their modal value)
+
+This is what *emmeans* does with `emtrends()`
+
+(`emmeans()` averages predictions as per above)
+
+---
+
+# Marginal effect at the mean
+
+Can obtain what `emtrends()` would give us by setting all variable not mentioned to their mean (mode)
+
+
+``` r
+gnu_glm1 |&gt; avg_predictions(newdata = "mean", variable = "death")
+```
+
+```
+## 
+##      death Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %
+##  Other            6       2.45 2.45   0.0143  6.1   1.2   10.8
+##  Predation       26       5.10 5.10   &lt;0.001 21.5  16.0   36.0
+## 
+## Type:  response 
+## Columns: death, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(newdata = "mean", variable = "death")
+```
+
+```
+## 
+##  Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %
+##        20       5.66 3.54   &lt;0.001 11.3  8.91   31.1
+## 
+## Term: death
+## Type:  response 
+## Comparison: Predation - Other
+## Columns: rowid, term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted
+```
+
+That's quite different!
+
+---
+
+# Marginal effect at the mean
+
+The previous marginal effects / comparisons were obtained with
+
+
+``` r
+datagrid(model = gnu_glm1, death = c("Predation", "Other"))
+```
+
+```
+##   sex marrow     death rowid
+## 1   F    SWF Predation     1
+## 2   F    SWF     Other     2
+```
+
+---
+
+# MEM vs AME
+
+These will become the same once we ask for comparisons/slopes conditioned on `sex` and `marrow` as now there is nothign else to average in the AME
+
+.small[
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(newdata = "mean", variable = "death", by = c("sex", "marrow"))
+```
+
+```
+## 
+##   Term sex marrow Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %
+##  death   F    OG         6       7.62  0.788  0.43079  1.2  -8.93  20.93
+##  death   F    SWF       20       5.66  3.536  &lt; 0.001 11.3   8.91  31.09
+##  death   F    TG        -8       4.90 -1.633  0.10247  3.3 -17.60   1.60
+##  death   M    OG        31       7.42  4.180  &lt; 0.001 15.1  16.46  45.54
+##  death   M    SWF        7       4.58  1.528  0.12663  3.0  -1.98  15.98
+##  death   M    TG       -16       6.00 -2.667  0.00766  7.0 -27.76  -4.24
+## 
+## Type:  response 
+## Comparison: Predation - Other
+## Columns: term, contrast, sex, marrow, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(variable = "death", by = c("sex", "marrow"))
+```
+
+```
+## 
+##   Term sex marrow Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %
+##  death   F    OG         6       7.62  0.788  0.43079  1.2  -8.93  20.93
+##  death   F    SWF       20       5.66  3.536  &lt; 0.001 11.3   8.91  31.09
+##  death   F    TG        -8       4.90 -1.633  0.10247  3.3 -17.60   1.60
+##  death   M    OG        31       7.42  4.180  &lt; 0.001 15.1  16.46  45.54
+##  death   M    SWF        7       4.58  1.528  0.12663  3.0  -1.98  15.98
+##  death   M    TG       -16       6.00 -2.667  0.00766  7.0 -27.76  -4.24
+## 
+## Type:  response 
+## Comparison: Predation - Other
+## Columns: term, contrast, sex, marrow, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+]
+
+---
+
+# Comparisons
+
+We often want to compare one level of a treatment with another
+
+* pairwise comparisons
+* treatment vs reference (control)
+
+With a single categorical variable this is fine, but what do you want when the model includes multiple effects and interactions?
+
+---
+
+# Comparisons
+
+Niavely we could do:
+
+.small[
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"))
+```
+
+```
+## 
+##  Contrast Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %
+##  SWF - OG   -15.00       3.22 -4.657   &lt;0.001 18.2 -21.31  -8.69
+##  TG - OG    -13.25       3.29 -4.030   &lt;0.001 14.1 -19.69  -6.81
+##  TG - SWF     1.75       2.66  0.659     0.51  1.0  -3.46   6.96
+## 
+## Term: marrow
+## Type:  response 
+## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+]
+
+What are we comparing here?
+
+---
+
+# Comparisons
+
+With
+
+.small[
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"))
+```
+
+```
+## 
+##  Contrast Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %
+##  SWF - OG   -15.00       3.22 -4.657   &lt;0.001 18.2 -21.31  -8.69
+##  TG - OG    -13.25       3.29 -4.030   &lt;0.001 14.1 -19.69  -6.81
+##  TG - SWF     1.75       2.66  0.659     0.51  1.0  -3.46   6.96
+## 
+## Term: marrow
+## Type:  response 
+## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+]
+
+We are averaging the comparisons of the levels of `marrow` over the other variables in the model
+
+---
+
+# Comparisons
+
+We get different answers if we condition on `sex` say
+
+.small[
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"), by = "sex")
+```
+
+```
+## 
+##    Term Contrast sex Estimate Std. Error     z Pr(&gt;|z|)    S   2.5 % 97.5 %
+##  marrow SWF - OG   F    -13.0       4.74 -2.74  0.00613  7.3 -22.297 -3.703
+##  marrow TG - OG    F    -17.0       4.53 -3.75  &lt; 0.001 12.5 -25.874 -8.126
+##  marrow TG - SWF   F     -4.0       3.74 -1.07  0.28505  1.8 -11.334  3.334
+##  marrow SWF - OG   M    -17.0       4.36 -3.90  &lt; 0.001 13.3 -25.543 -8.457
+##  marrow TG - OG    M     -9.5       4.77 -1.99  0.04640  4.4 -18.848 -0.152
+##  marrow TG - SWF   M      7.5       3.77  1.99  0.04694  4.4   0.101 14.899
+## 
+## Type:  response 
+## Columns: term, contrast, sex, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+]
+
+This makes total sense; the model includes interactions
+
+Both are correct
+
+You need to specify what it is that you mean by a comparison
+
+---
+
+# Comparisons
+
+.small[
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"), by = c("sex", "death"))
+```
+
+```
+## 
+##    Term Contrast sex     death Estimate Std. Error      z Pr(&gt;|z|)    S   2.5 %
+##  marrow SWF - OG   F Other          -20       5.66 -3.536  &lt; 0.001 11.3 -31.087
+##  marrow TG - OG    F Other          -10       6.48 -1.543  0.12282  3.0 -22.702
+##  marrow TG - SWF   F Other           10       4.69  2.132  0.03301  4.9   0.807
+##  marrow SWF - OG   F Predation       -6       7.62 -0.788  0.43079  1.2 -20.927
+##  marrow TG - OG    F Predation      -24       6.32 -3.795  &lt; 0.001 12.7 -36.396
+##  marrow TG - SWF   F Predation      -18       5.83 -3.087  0.00202  8.9 -29.428
+##  marrow SWF - OG   M Other           -5       4.36 -1.147  0.25135  2.0 -13.543
+##  marrow TG - OG    M Other           14       6.16  2.271  0.02314  5.4   1.918
+##  marrow TG - SWF   M Other           19       5.74  3.307  &lt; 0.001 10.1   7.741
+##  marrow SWF - OG   M Predation      -29       7.55 -3.841  &lt; 0.001 13.0 -43.797
+##  marrow TG - OG    M Predation      -33       7.28 -4.533  &lt; 0.001 17.4 -47.269
+##  marrow TG - SWF   M Predation       -4       4.90 -0.816  0.41422  1.3 -13.602
+##  97.5 %
+##   -8.91
+##    2.70
+##   19.19
+##    8.93
+##  -11.60
+##   -6.57
+##    3.54
+##   26.08
+##   30.26
+##  -14.20
+##  -18.73
+##    5.60
+## 
+## Type:  response 
+## Columns: term, contrast, sex, death, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+]
+
+---
+
+# Comparisons
+
+With so many comparisons, we should adjust the `\(p\)` values
+
+.small[
+
+``` r
+gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"),
+    by = c("sex", "death"), p_adjust = "fdr")
+```
+
+```
+## 
+##    Term Contrast sex     death Estimate Std. Error      z Pr(&gt;|z|)    S
+##  marrow SWF - OG   F Other          -20       5.66 -3.536  0.00122  9.7
+##  marrow TG - OG    F Other          -10       6.48 -1.543  0.16376  2.6
+##  marrow TG - SWF   F Other           10       4.69  2.132  0.04951  4.3
+##  marrow SWF - OG   F Predation       -6       7.62 -0.788  0.43079  1.2
+##  marrow TG - OG    F Predation      -24       6.32 -3.795  &lt; 0.001 10.7
+##  marrow TG - SWF   F Predation      -18       5.83 -3.087  0.00404  7.9
+##  marrow SWF - OG   M Other           -5       4.36 -1.147  0.30162  1.7
+##  marrow TG - OG    M Other           14       6.16  2.271  0.03967  4.7
+##  marrow TG - SWF   M Other           19       5.74  3.307  0.00226  8.8
+##  marrow SWF - OG   M Predation      -29       7.55 -3.841  &lt; 0.001 10.7
+##  marrow TG - OG    M Predation      -33       7.28 -4.533  &lt; 0.001 13.8
+##  marrow TG - SWF   M Predation       -4       4.90 -0.816  0.43079  1.2
+## 
+## Type:  response 
+## Columns: term, contrast, sex, death, estimate, std.error, statistic, p.value, s.value
+```
+]
+
+---
+class: inverse middle center subsection
+
+# Mixed effects
+
+---
+# Mixed effects models
+
+Mixed effects models are useful for modelling data that have some hierarchical form
+
+- Longitudinal or panel data
+- Repeated measures
+- Time series
+- Blocked experiments
+
+Mixed effects models can combine fixed and random effects with multiple error terms
+
+---
+
+# Mixed effects models
+
+Mixed effects models incorporate two kinds of effects
+
+- **Fixed effects**
+- **Random effects**
+
+In models discussed thus far on the course the effects included in the models were **fixed**
+
+**Random** effects represent experimental or observational blocks
+
+It doesn't make sense to estimate a random effect
+
+Instead try to estimate the parameters of the distribution(s) of the random variables
+
+---
+
+# Random effects
+
+**Random effects** are included in a model to account for correlations between observations
+
+The correlations arise from e.g. being in the same experimental block
+
+- *patients* within *hospitals*
+- *students* within *classes* within *schools*
+
+This structure suggests multiple levels of variation
+
+- variation *within* a block&amp;mdash; `\(\sigma^2_{\mathsf{within}}\)`
+    - differences between patients within a single hospital
+- variation *between* blocks&amp;mdash; `\(\sigma^2_{\mathsf{between}}\)`
+    - differences between hospitals in patient waiting times
+
+---
+
+# Random effects
+
+The total variance then is
+
+`$$\sigma^2_{\mathsf{total}} = \sigma^2_{\mathsf{within}} + \sigma^2_{\mathsf{between}}$$`
+
+This results in there being a correlation `\(\rho\)` between any two observations in the same group of
+
+`$$\rho = \sqrt{\sigma^2_{\mathsf{between}} / \sigma^2_{\mathsf{total}}}$$`
+
+Observations that come from **different** groups are **uncorrelated**
+
+With random effects we try to quantify the variability in effect of `\(x\)` in each group
+
+---
+
+# Random effects&amp;mdash;philosophical aside
+
+**Frequentists** define random effects as categorical variables whose levels are drawn **randomly** from the set of all possible levels
+
+- random sample of hospitals from set of all hospitals
+
+**Bayesians** define random effects as variables whose parameters come from a particular distribution
+
+If you observed *all* hospitals of relevance, frequentist view means you can't treat that variable as a random effect
+
+Use random effect if variable is representative of the population you are studying
+
+---
+# When to use a random effect?
+
+.small[
+When to use a random effects (after Bolker 2015 in Fox *et al* (Eds) (2015) *Ecological Statistics: contemporary theory &amp; application*. Oxford University Press)
+]
+
+.small[
+- not interested in testing differences in response at levels of the grouping variable
+- want to quantify variability in levels of the grouping variable
+- want to predict for unobserved levels of the grouping variable
+- want to combine information information across levels of the grouping variable
+- varying information per level of grouping variable
+- levels of grouping variable randomly sampled from set of all levels
+- have a categorical variable that is a nuisance variable but which you need to control for
+
+Don't use random effects if you have fewer than **5** levels&amp;mdash;treat it as a fixed categorical variable instead
+]
+
+---
+
+# Simple random effects
+
+Two types of *simple random effects* that we'll consider
+
+- random intercepts
+- random slopes &amp; intercepts
+
+**Random intercepts** allow each level of the group to have a different **mean response**
+
+- Some hospitals have shorter waiting times on average than others
+
+**Random slopes &amp; intercepts** allow each a different **mean response** *and* a different effect of another variable within the group
+
+---
+
+# Simple random effects
+
+![](index_files/figure-html/random-effects-cartoon-1.svg)&lt;!-- --&gt;
+
+---
+class: inverse middle center subsection
+
+# Simple random effects
+
+---
+
+# Chick growth rates
+
+R comes with the `ChickWeight` data set, containing 578 observations from an experiment of the effect of diet on early growth of chicks
+
+
+``` r
+data(ChickWeight)
+glimpse(ChickWeight)
+```
+
+```
+## Rows: 578
+## Columns: 4
+## $ weight &lt;dbl&gt; 42, 51, 59, 64, 76, 93, 106, 125, 149, 171, 199, 205, 40, 49, 5…
+## $ Time   &lt;dbl&gt; 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 21, 0, 2, 4, 6, 8, 10, 1…
+## $ Chick  &lt;ord&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, …
+## $ Diet   &lt;fct&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+```
+
+---
+
+# Chick growth rates
+
+
+``` r
+ChickWeight |&gt;
+  ggplot(aes(x = Time, y = weight, group = Chick)) +
+  geom_line(alpha = 0.7) +
+  ylim(0, NA) +
+  facet_wrap(~ Diet, labeller = label_both)
+```
+
+&lt;img src="index_files/figure-html/chicks-plot-1.svg" width="75%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Unconditional linear growth model
+
+`\begin{align*}
+\mathtt{weight}_{ij} &amp;\sim \operatorname{Normal}(\mu_{ij}, \sigma_{\epsilon}^2) \\
+\mu_{ij} &amp;= a_i + b_i \mathtt{Time}_{ij} \\
+a_i      &amp;= \alpha_0 + u_i \\
+b_i      &amp;= \beta_0 + v_i \\
+\begin{bmatrix} u_i \\ v_i \end{bmatrix} &amp;\sim \operatorname{Normal} \begin{pmatrix} \begin{bmatrix} 0 \\ 0 \end{bmatrix} , \begin{bmatrix} \sigma_u^2 &amp; \\ \sigma_{uv} &amp; \sigma_v^2 \end{bmatrix} \end{pmatrix}
+\end{align*}`
+
+`\(i\)` indexes the `Chick` &amp; `\(j\)` indexes the measurements across `Time`
+
+`\(a_i\)` intercept &amp; `\(b_i\)` slopes are random with covariance `\(\sigma_{uv}\)`
+
+`\(\alpha_0\)` &amp; `\(\beta_0\)` are the population-level effects
+
+---
+
+# Unconditional linear growth model
+
+In *lme4* we can fit this model with
+
+
+``` r
+library("lme4")
+chick_lmm1 &lt;- lmer(weight ~ 1 + Time + (1 + Time | Chick),
+  data = ChickWeight)
+```
+
+`1 + Time` are `\(\alpha_0\)` &amp; `\(\beta_0\)`, the population effects
+
+`(1 + Time | Chick)` specifies the random effects &amp;mdash; a random intercept and effect of `Time` for each `Chick`
+
+`1` is an intercept
+
+---
+
+# Unconditional linear growth model
+
+.small[
+
+``` r
+summary(chick_lmm1)
+```
+
+```
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: weight ~ 1 + Time + (1 + Time | Chick)
+##    Data: ChickWeight
+## 
+## REML criterion at convergence: 4827.5
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.6731 -0.5563 -0.0277  0.5010  3.4939 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev. Corr 
+##  Chick    (Intercept) 140.54   11.855        
+##           Time         14.14    3.761   -0.95
+##  Residual             163.51   12.787        
+## Number of obs: 578, groups:  Chick, 50
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)  29.1780     1.9573   14.91
+## Time          8.4531     0.5408   15.63
+## 
+## Correlation of Fixed Effects:
+##      (Intr)
+## Time -0.871
+```
+]
+
+---
+
+# Unconditional linear growth model
+
+What have we fitted?
+
+.row[
+.col-6[
+.smaller[
+
+``` r
+library("marginaleffects")
+p_chick_lmm1 &lt;- predictions(chick_lmm1,
+    newdata = datagrid(Chick = ChickWeight$Chick,
+        Time = 0:21))
+
+p_chick_lmm1 |&gt;
+ggplot(aes(Time, estimate, level = Chick)) +
+    geom_line() +
+    labs(y = "Predicted weight",
+        x = "Time",
+        title = "Linear growth model")
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/predictions-chick-lmm1-1.svg)&lt;!-- --&gt;
+]
+]
+
+Each `Chick` has its own regression line (intercept `\(a_i\)` and growth rate `\(b_i\)`)
+
+These are estimated as varying around the *population*-level (average) intercept `\(\alpha_0\)` and growth rate `\(\beta_0\)`
+
+---
+
+# Unconditional linear growth model
+
+Population-level predictions can be obtained by setting `re.form = NA` when predicting
+
+.row[
+.col-6[
+.smaller[
+
+``` r
+pop_chick_lmm1 &lt;- predictions(chick_lmm1,
+    newdata = datagrid(Chick = NA, Time = 0:21),
+    re.form = NA) # &lt;-- !!
+
+pop_chick_lmm1 |&gt;
+    ggplot(aes(x = Time, y = estimate,
+        ymin = conf.low, ymax = conf.high)) +
+    geom_ribbon(alpha = .1, fill = "red") +
+    geom_line() +
+    labs(y = "Predicted weight",
+        x = "Time",
+        title = "Population-level trajectories")
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/pop-predictions-chick-lmm1-1.svg)&lt;!-- --&gt;
+]
+]
+
+---
+
+# Conditional linear growth model
+
+Our model doesn't include anything for `Diet`, let's correct that
+
+`\begin{align*}
+\mathtt{weight}_{ij} &amp;\sim \operatorname{Normal}(\mu_{ij}, \sigma_{\epsilon}^2) \\
+\mu_{ij} &amp;= a_i + b_i \mathtt{Time}_{ij} \\
+a_i      &amp;= \alpha_0 + \alpha_1 \mathtt{Diet}_i + u_i \\
+b_i      &amp;= \beta_0 + \beta_1 \mathtt{Diet}_i + v_i \\
+\begin{bmatrix} u_i \\ v_i \end{bmatrix} &amp;\sim \operatorname{Normal} \begin{pmatrix} \begin{bmatrix} 0 \\ 0 \end{bmatrix} , \begin{bmatrix} \sigma_u^2 &amp; \\ \sigma_{uv} &amp; \sigma_v^2 \end{bmatrix} \end{pmatrix}
+\end{align*}`
+
+The intercept for each `Chick` `\(a_i\)` is now the sum of the population-level intercept `\(\alpha_0\)` plus the population-level mean effect of `Diet` `\(\alpha_1\)` &amp; similarly for the slopes
+
+---
+
+# Conditional linear growth model
+
+In *lme4* we can fit this model with
+
+
+``` r
+chick_lmm2 &lt;- lmer(weight ~ 1 + Time + Diet + Time:Diet + (1 + Time | Chick),
+  data = ChickWeight)
+```
+
+Note that this model implies a population-level interaction between `Time` and `Diet`
+
+---
+
+# Conditional linear growth model
+
+.small[
+
+``` r
+summary(chick_lmm2)
+```
+
+```
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: weight ~ 1 + Time + Diet + Time:Diet + (1 + Time | Chick)
+##    Data: ChickWeight
+## 
+## REML criterion at convergence: 4781.5
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.7223 -0.5672 -0.0343  0.4579  3.5184 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev. Corr 
+##  Chick    (Intercept) 116.91   10.812        
+##           Time         10.92    3.305   -0.97
+##  Residual             163.37   12.782        
+## Number of obs: 578, groups:  Chick, 50
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)  33.6613     2.9192  11.531
+## Time          6.2770     0.7614   8.245
+## Diet2        -5.0277     5.0108  -1.003
+## Diet3       -15.4110     5.0108  -3.076
+## Diet4        -1.7505     5.0179  -0.349
+## Time:Diet2    2.3321     1.3044   1.788
+## Time:Diet3    5.1459     1.3044   3.945
+## Time:Diet4    3.2550     1.3051   2.494
+## 
+## Correlation of Fixed Effects:
+##            (Intr) Time   Diet2  Diet3  Diet4  Tm:Dt2 Tm:Dt3
+## Time       -0.880                                          
+## Diet2      -0.583  0.513                                   
+## Diet3      -0.583  0.513  0.339                            
+## Diet4      -0.582  0.512  0.339  0.339                     
+## Time:Diet2  0.514 -0.584 -0.882 -0.299 -0.299              
+## Time:Diet3  0.514 -0.584 -0.299 -0.882 -0.299  0.341       
+## Time:Diet4  0.514 -0.583 -0.299 -0.299 -0.882  0.340  0.340
+```
+]
+
+
+---
+
+# Conditional linear growth model
+
+What have we fitted now?
+
+.row[
+.col-6[
+.smaller[
+
+``` r
+p_chick_lmm2 &lt;- predictions(chick_lmm2)
+
+p_chick_lmm2 |&gt;
+ggplot(aes(Time, estimate, level = Chick)) +
+    geom_line() +
+    labs(y = "Predicted weight",
+        x = "Time",
+        title = "Linear growth model") +
+    facet_wrap(~ Diet, labeller = label_both)
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/predictions-chick-lmm2-1.svg)&lt;!-- --&gt;
+]
+]
+
+Each `Chick` has its own regression line (intercept `\(a_i\)` and growth rate `\(b_i\)`)
+
+These are estimated as varying around the *population*-level (average) intercept `\(\alpha_0\)` and growth rate `\(\beta_0\)` plus the population-level `Diet` effects
+
+---
+
+# Conditional linear growth model
+
+Population-level predictions can be obtained by setting `re.form = NA` when predicting
+
+.row[
+.col-6[
+.smaller[
+
+``` r
+pop_chick_lmm2 &lt;- predictions(chick_lmm2,
+    newdata = datagrid(Chick = NA, Diet = 1:4, Time = 0:21),
+    re.form = NA) # &lt;-- !!
+
+pop_chick_lmm2 |&gt;
+    ggplot(aes(x = Time, y = estimate,
+        ymin = conf.low, ymax = conf.high)) +
+    geom_ribbon(alpha = .1, fill = "red") +
+    geom_line() +
+    labs(y = "Predicted weight",
+        x = "Time",
+        title = "Population-level trajectories") +
+    facet_wrap(~ Diet, labeller = label_both)
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/pop-predictions-chick-lmm2-1.svg)&lt;!-- --&gt;
+]
+]
+
+---
+
+# Problems?
+
+Can you identify any issues with this model?
+
+---
+
+
+# Conditional linear growth model 2
+
+Our model includes an adjustment for `Diet` at `Time == 0`
+
+`\begin{align*}
+\mathtt{weight}_{ij} &amp;\sim \operatorname{Normal}(\mu_{ij}, \sigma_{\epsilon}^2) \\
+\mu_{ij} &amp;= a_i + b_i \mathtt{Time}_{ij} \\
+a_i      &amp;= \alpha_0 + u_i \\
+b_i      &amp;= \beta_0 + \beta_1 \mathtt{Diet}_i + v_i \\
+\begin{bmatrix} u_i \\ v_i \end{bmatrix} &amp;\sim \operatorname{Normal} \begin{pmatrix} \begin{bmatrix} 0 \\ 0 \end{bmatrix} , \begin{bmatrix} \sigma_u^2 &amp; \\ \sigma_{uv} &amp; \sigma_v^2 \end{bmatrix} \end{pmatrix}
+\end{align*}`
+
+We remove the population-level effect of `Diet` from the previous model `\(\alpha_1\)`
+
+---
+
+# Conditional linear growth model 2
+
+In *lme4* we can fit this model with
+
+
+``` r
+chick_lmm3 &lt;- lmer(weight ~ 1 + Time + Time:Diet + (1 + Time | Chick),
+  data = ChickWeight)
+```
+
+This model implies different growth rates for each diet, but no constant difference between diets
+
+---
+
+# Conditional linear growth model 2
+
+.small[
+
+``` r
+summary(chick_lmm3)
+```
+
+```
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: weight ~ 1 + Time + Time:Diet + (1 + Time | Chick)
+##    Data: ChickWeight
+## 
+## REML criterion at convergence: 4806
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.7405 -0.5656 -0.0450  0.4905  3.4965 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev. Corr 
+##  Chick    (Intercept) 140.43   11.850        
+##           Time         12.15    3.485   -0.97
+##  Residual             163.41   12.783        
+## Number of obs: 578, groups:  Chick, 50
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)  29.1854     1.9565  14.918
+## Time          7.3046     0.5761  12.680
+## Time:Diet2    1.1779     0.6150   1.915
+## Time:Diet3    1.6101     0.6150   2.618
+## Time:Diet4    2.8522     0.6152   4.636
+## 
+## Correlation of Fixed Effects:
+##            (Intr) Time   Tm:Dt2 Tm:Dt3
+## Time       -0.779                     
+## Time:Diet2  0.000 -0.368              
+## Time:Diet3  0.000 -0.368  0.345       
+## Time:Diet4  0.001 -0.369  0.345  0.345
+```
+]
+
+
+---
+
+# Conditional linear growth model 2
+
+What have we fitted now?
+
+.row[
+.col-6[
+.smaller[
+
+``` r
+p_chick_lmm3 &lt;- predictions(chick_lmm3)
+
+p_chick_lmm3 |&gt;
+ggplot(aes(Time, estimate, level = Chick)) +
+    geom_line() +
+    labs(y = "Predicted weight",
+        x = "Time",
+        title = "Linear growth model 2") +
+    facet_wrap(~ Diet, labeller = label_both)
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/predictions-chick-lmm3-1.svg)&lt;!-- --&gt;
+]
+]
+
+Each `Chick` has its own regression line (intercept `\(a_i\)` and growth rate `\(b_i\)`)
+
+These are estimated as varying around the *population*-level (average) intercept `\(\alpha_0\)` and growth rate `\(\beta_0\)` plus the population-level `Time` and `Time:Diet` effects
+
+---
+
+# Conditional linear growth model 2
+
+Population-level predictions can be obtained by setting `re.form = NA` when predicting
+
+.row[
+.col-6[
+.smaller[
+
+``` r
+pop_chick_lmm3 &lt;- predictions(chick_lmm3,
+    newdata = datagrid(Chick = NA, Diet = 1:4, Time = 0:21),
+    re.form = NA) # &lt;-- !!
+
+pop_chick_lmm3 |&gt;
+    ggplot(aes(x = Time, y = estimate,
+        ymin = conf.low, ymax = conf.high)) +
+    geom_ribbon(alpha = .1, fill = "red") +
+    geom_line() +
+    labs(y = "Predicted weight",
+        x = "Time",
+        title = "Population-level trajectories 2") +
+    facet_wrap(~ Diet, labeller = label_both)
+```
+]
+]
+
+.col-6[
+![](index_files/figure-html/pop-predictions-chick-lmm3-1.svg)&lt;!-- --&gt;
+]
+]
+
+---
+
+# Estimated growth rates
+
+
+``` r
+chick_lmm3 |&gt; avg_slopes(variable = "Time", by = "Diet", re.form = NA)
+```
+
+```
+## 
+##  Term Diet Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %
+##  Time    1     7.30      0.576 12.7   &lt;0.001 120.0  6.18   8.43
+##  Time    2     8.48      0.670 12.7   &lt;0.001 119.5  7.17   9.80
+##  Time    3     8.91      0.670 13.3   &lt;0.001 131.7  7.60  10.23
+##  Time    4    10.16      0.670 15.2   &lt;0.001 170.0  8.84  11.47
+## 
+## Type:  response 
+## Columns: term, Diet, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+
+---
+
+# Comparisons for mixed models
+
+Pairwise comparisons of slopes
+
+
+``` r
+chick_lmm3 |&gt; avg_comparisons(variables = "Time", by = "Diet", hypothesis = "pairwise", re.form = NA)
+```
+
+```
+## 
+##   Term Estimate Std. Error      z Pr(&gt;|z|)    S 2.5 %  97.5 %
+##  1 - 2   -1.178      0.615 -1.915  0.05544  4.2 -2.38  0.0274
+##  1 - 3   -1.610      0.615 -2.618  0.00884  6.8 -2.82 -0.4048
+##  1 - 4   -2.852      0.615 -4.636  &lt; 0.001 18.1 -4.06 -1.6463
+##  2 - 3   -0.432      0.704 -0.614  0.53930  0.9 -1.81  0.9477
+##  2 - 4   -1.674      0.704 -2.377  0.01744  5.8 -3.05 -0.2939
+##  3 - 4   -1.242      0.704 -1.764  0.07781  3.7 -2.62  0.1383
+## 
+## Type:  response 
+## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+
+---
+
+# Comparisons for mixed models
+
+Comparison of slopes with reference level
+
+
+``` r
+chick_lmm3 |&gt; avg_comparisons(variables = "Time", by = "Diet", hypothesis = "reference", re.form = NA)
+```
+
+```
+## 
+##   Term Estimate Std. Error    z Pr(&gt;|z|)    S   2.5 % 97.5 %
+##  2 - 1     1.18      0.615 1.92  0.05544  4.2 -0.0274   2.38
+##  3 - 1     1.61      0.615 2.62  0.00884  6.8  0.4048   2.82
+##  4 - 1     2.85      0.615 4.64  &lt; 0.001 18.1  1.6463   4.06
+## 
+## Type:  response 
+## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
+```
+
+---
+
+# Model diagnostics
+
+Misspecification of GL(M)Ms cannot be reliably diagnosed with standard residual plot
+
+The expected distribution of the data (predictive distribution) changes with the fitted values
+
+We expect to see pattern in standard residual plots
+
+Hard to separate patterns we expect to see if model is corrcetly specified from those we don't expect
+
+---
+
+# Model diagnostics
+
+With GL(M)Ms model diagnostics boil down to whether the conditional distribution of `\(y_i\)` is correctly specified or not
+
+DHARMa approaches this through the simulation of randomised residuals
+
+1. simulate new response data from the model for each `\(y_i\)`
+2. for each `\(y_i\)` calculate the ECDF of the simulated observations
+3. residual is the value of the ECDF at the value of the observed data
+
+A residual of 0 means all simluted values are larger than the observed value
+
+---
+
+# Randomised residuals
+
+&lt;img src="resources/dharma-residuals.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Randomised residuals
+
+Under this definition, we expect the residuals to be uniform random variables on the interval 0&amp;ndash;1 if the model is correctly specified
+
+Model diagnostics then boil down to looking at deviation from uniform randomness
+
+DHARMa provides plots and tests for a range of possible deviations
+
+---
+
+# Randomised residuals
+
+Typically, as we're interested in doing multiple diagnostics, we simulate the residuals once and reuse them
+
+
+``` r
+library("DHARMa")
+sim_lmm3 &lt;- simulateResiduals(chick_lmm3, plot = FALSE)
+```
+
+---
+
+# Randomised residuals
+
+
+``` r
+plot(sim_lmm3)
+```
+
+![](index_files/figure-html/unnamed-chunk-52-1.svg)&lt;!-- --&gt;
+
+---
+
+# GLMMs
+
+Generalized linear mixed models generalize linear mixed mdoels in the same way as GLMs generalize linear models
+
+We need to choose an appropriate conditional distribution for the response and link function
+
+Can fit using `glmer()` but limited by range of families allowed
+
+`glmmTMB::glmmTMB()` is a new (developing) alternative with wider array of features inc. families
+
+Beyond this you likely need Bayesian support and I would suggest `brms::brm()`
+
+---
+
+# GLMMs
+
+Are things improved by fitting a GLMM (chick weight can't be negative)?
+
+
+``` r
+chick_glmm1 &lt;- glmer(weight ~ 1 + Time + Time:Diet + (1 + Time | Chick),
+    data = ChickWeight, family = Gamma(link = "log"))
+sim_glmm1 &lt;- simulateResiduals(chick_glmm1, plot = FALSE)
+```
+
+---
+
+# Randomised residuals
+
+
+``` r
+plot(sim_glmm1)
+```
+
+![](index_files/figure-html/unnamed-chunk-54-1.svg)&lt;!-- --&gt;
+
+--
+
+Nope!
+
+---
+
+# ???
+
+
+``` r
+chick_lmm4 &lt;- lmer(weight ~ 1 + poly(Time, 2) + poly(Time, 2):Diet + (1 + poly(Time, 2) | Chick),
+    data = ChickWeight)
+sim_lmm4 &lt;- simulateResiduals(chick_lmm4, plot = FALSE)
+```
+
+---
+
+# Randomised residuals
+
+
+``` r
+plot(sim_lmm4)
+```
+
+![](index_files/figure-html/unnamed-chunk-56-1.svg)&lt;!-- --&gt;
+
+---
+
+# Clover seeds
+
+.small[
+The seeds of some species of clover (*Trifolium* spp.) will not germinate immediately after ripening, but must undergo a period of "softening", by exposure to fluctuating high and low temperatures, usually on the soil surface.
+
+Seeds of 8 clover species were sown into strips of fine mesh cotton bags, 100 seeds of a single species in each bag
+
+Each strip comprised one bag of each species. At the start of summer, the bags were laid on the soil surface in full sun at a site cleared of vegetation.
+
+At intervals during the summer and autumn, two or four strips were removed from the field, and the seeds in each bag were tested to determine how many were still "hard" (i.e. would not germinate when moistened in favourable conditions)
+]
+
+---
+
+# Clover Seeds
+
+As the species studied all belong to the genus *Trifolium* they are expected to have some characteristics in common, but no prior information is available to us concerning the seed-softening behaviour of the individual species.
+
+* Decide whether "species" should be specified as a fixed-effect or a random-effect term in the model to be fitted to these data and explain your decision.
+
+---
+
+# Clover Seeds
+
+* Specify a regression model for this experiment. Following your decision concerning "species", which term(s) in the model should be regarded as fixed and which as random? What is the response variable?
+
+---
+
+# Clover Seeds
+
+* Fit your mixed model to the data, specifying an appropriate error distribution for the response variable, and an appropriate link function to relate the response variable to the linear model.
+
+* Consider whether there is evidence that any terms can be omitted from the model. If so, fit the modified model to the data.
+
+---
+
+# Clover Seeds
+
+* Make a graphical display, showing the fitted relationship between the proportion of hard seed remaining for each species and the time elapsed since the start of exposure, and showing the scatter of the observed values around this relationship.
+
+---
+
+# Clover seeds load data
+
+
+``` r
+clover &lt;- readr::read_csv("data/clover.csv")
+```
+
+
+
+
+``` r
+clover &lt;- clover |&gt;
+    mutate(fspecies = factor(species),
+        freplication = factor(replication),
+        ftime = factor(time))
+library("lme4")
+```
+
+---
+
+# Clover seeds
+
+
+``` r
+clover
+```
+
+```
+## # A tibble: 240 × 8
+##    species       replication  time nhard nsoft fspecies      freplication ftime
+##    &lt;chr&gt;               &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;        &lt;fct&gt;
+##  1 T. glomeratum           1     0    98     2 T. glomeratum 1            0    
+##  2 T. glomeratum           2     0    99     1 T. glomeratum 2            0    
+##  3 T. glomeratum           3     0    99     1 T. glomeratum 3            0    
+##  4 T. glomeratum           4     0    99     1 T. glomeratum 4            0    
+##  5 T. spumosum             1     0    94     6 T. spumosum   1            0    
+##  6 T. spumosum             2     0    93     7 T. spumosum   2            0    
+##  7 T. spumosum             3     0    95     5 T. spumosum   3            0    
+##  8 T. spumosum             4     0    96     4 T. spumosum   4            0    
+##  9 T. hirtum               1     0    88    12 T. hirtum     1            0    
+## 10 T. hirtum               2     0    89    11 T. hirtum     2            0    
+## # ℹ 230 more rows
+```
+
+---
+
+# Stop
+
+---
+
+# Clover seeds answers
+
+---
+
+# Clover seeds
+
+We are told that the clover species have features in common, but there is no relevant prior information about their individual characteristics. This means that they form an exchangeable set, and it is therefore appropriate to specify "species" as a random-effect model term.
+
+---
+
+# Clover seeds
+
+
+``` r
+clover_glmm1 &lt;- glmer(cbind(nhard, nsoft) ~ time + (time | fspecies) +
+        (1 | fspecies:ftime) + (1 | ftime:freplication),
+    family = binomial(link = "logit"), data = clover)
+```
+
+
+
+``` r
+library("glmmTMB")
+clover_tmb1 &lt;- glmmTMB(cbind(nhard, nsoft) ~ time + (time | fspecies) +
+        (1 | fspecies:ftime) + (1 | ftime:freplication),
+    family = binomial(link = "logit"), data = clover)
+```
+
+---
+
+# GA(M)M
+
+
+``` r
+library("mgcv")
+chick_gam1 &lt;- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
+    data = ChickWeight, method = "fREML")
+sim_gam1 &lt;- simulateResiduals(chick_gam1, plot = FALSE)
+plot(sim_gam1)
+```
+
+![](index_files/figure-html/unnamed-chunk-63-1.svg)&lt;!-- --&gt;
+
+---
+
+# GA(M)M
+
+
+``` r
+chick_gam2 &lt;- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
+    data = ChickWeight, method = "fREML", family = Gamma(link = "log"))
+sim_gam2 &lt;- simulateResiduals(chick_gam2, plot = FALSE)
+plot(sim_gam2)
+```
+
+![](index_files/figure-html/unnamed-chunk-64-1.svg)&lt;!-- --&gt;
+
+---
+
+# GA(M)M
+
+
+``` r
+chick_gam3 &lt;- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
+    data = ChickWeight, method = "fREML", family = tw(link = "log"), discrete = TRUE, n.threads = 3)
+sim_gam3 &lt;- simulateResiduals(chick_gam3, plot = FALSE)
+plot(sim_gam3)
+```
+
+![](index_files/figure-html/unnamed-chunk-65-1.svg)&lt;!-- --&gt;
+
+---
+
+# Re-use
+
+Copyright © (2015&amp;ndash;2023) Gavin L. Simpson Some Rights Reserved
+
+Unless indicated otherwise, this slide deck is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
