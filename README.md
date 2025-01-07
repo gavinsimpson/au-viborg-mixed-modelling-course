@@ -19,19 +19,11 @@ Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences
 
 You can register for this course here: <https://events.au.dk/phdcourseappliedmixedmodellingwithr>
 
-<!-- ### Slides
+### Slides
 
-* [Monday](https://gavinsimpson.github.io/au-multivariate-stats/slides/01-dissimilarity-clustering-diversity/slides.html)
+* [Slidedeck](https://bit.ly/420miIv)
 
-* [Tuesday](https://gavinsimpson.github.io/au-multivariate-stats/slides/02-unconstrained-ordination/slides.html)
-
-* [Wednesday](https://gavinsimpson.github.io/au-multivariate-stats/slides/03-constrained-ordination/slides.html)
-
-* [Thursday](https://gavinsimpson.github.io/au-multivariate-stats/slides/04-permutation-tests/slides.html)
-
-* [Friday](https://gavinsimpson.github.io/au-multivariate-stats/slides/05-other-stuff/slides.html)
-
-### Computing
+<!-- ### Computing
 
 * [Monday](https://gavinsimpson.github.io/au-multivariate-stats/computing/01-cluster-analysis/cluster-analysis.html)
 

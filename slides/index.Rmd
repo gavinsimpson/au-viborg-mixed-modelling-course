@@ -48,11 +48,11 @@ theme_set(theme_minimal(base_size = 16, base_family = 'Fira Sans'))
 
 # Slides
 
-Slidedeck: [bit.ly/47voask](https://bit.ly/47voask)
+Slidedeck: [https://bit.ly/420miIv](https://bit.ly/420miIv)
 
-Sources: [bit.ly/3udFioi](https://bit.ly/3udFioi)
+Sources: [https://bit.ly/409e6TM](https://bit.ly/409e6TM)
 
-Direct download a ZIP of everything: [bit.ly/3udFioi](https://bit.ly/3udFioi)
+Direct download a ZIP of everything: [bit.ly/422MKkY](https://bit.ly/422MKkY)
 
 Unpack the zip & remember where you put it
 
@@ -64,7 +64,7 @@ Or `usethis::use_course()`
 
 ```{r, eval = FALSE}
 #install.packages("usethis")
-usethis::use_course("https://bit.ly/3uguG86")
+usethis::use_course("https://bit.ly/422MKkY")
 ```
 
 ---
