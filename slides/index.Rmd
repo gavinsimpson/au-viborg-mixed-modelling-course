@@ -294,6 +294,14 @@ g(\mu_i) & = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
 
 # New notation
 
+```{r}
+knitr::include_graphics("resources/fig-gaussian-lm-descriptive-figure-1.png")
+```
+
+---
+
+# New notation
+
 Binomial GLM
 
 \begin{align*}
@@ -307,6 +315,30 @@ Poisson GLM
 y_i & \sim \text{Poisson}(\lambda_i) \\
 \log(\lambda_i) & = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij}
 \end{align*}
+
+---
+
+# New notation
+
+```{r}
+knitr::include_graphics("resources/fig-gaussian-lm-descriptive-figure-1.png")
+```
+
+---
+
+# New notation
+
+```{r}
+knitr::include_graphics("resources/fig-poisson-lm-descriptive-figure-1.png")
+```
+
+---
+
+# New notation
+
+```{r}
+knitr::include_graphics("resources/fig-other-dist-descr-1.png")
+```
 
 ---
 class: inverse middle center subsection
