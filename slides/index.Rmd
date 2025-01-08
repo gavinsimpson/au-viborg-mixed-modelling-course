@@ -824,11 +824,33 @@ summary(moth_glm2)
 .small[
 ```{r}
 library("mgcv")
-moth_glm3 <- gam(parasitoid ~ moth + treatment + moth * treatment,
+moth_glm3 <- gam(parasitoid ~ moth + treatment + moth:treatment,
     family = nb(), method = "ML", data = moth)
 summary(moth_glm3)
 ```
 ]
+
+---
+
+# Negative binomial
+
+```{r glmmtmb-negbin-version}
+library("glmmTMB")
+moth_glm4 <- glmmTMB(parasitoid ~ moth + treatment + moth:treatment,
+    family = nbinom2("log"), REML = FALSE, data = moth)
+summary(moth_glm4)
+```
+
+---
+
+# Visualising the model fit???
+
+```{r}
+library("marginaleffects")
+moth_glm4 |>
+    plot_predictions(condition = c("moth", "treatment"),
+        vcov = TRUE, type = "response")
+```
 
 ---
 class: inverse middle center subsection

@@ -1000,7 +1000,7 @@ summary(moth_glm2)
 
 ``` r
 library("mgcv")
-moth_glm3 &lt;- gam(parasitoid ~ moth + treatment + moth * treatment,
+moth_glm3 &lt;- gam(parasitoid ~ moth + treatment + moth:treatment,
     family = nb(), method = "ML", data = moth)
 summary(moth_glm3)
 ```
@@ -1011,7 +1011,7 @@ summary(moth_glm3)
 ## Link function: log 
 ## 
 ## Formula:
-## parasitoid ~ moth + treatment + moth * treatment
+## parasitoid ~ moth + treatment + moth:treatment
 ## 
 ## Parametric coefficients:
 ##                       Estimate Std. Error z value Pr(&gt;|z|)    
@@ -1027,6 +1027,53 @@ summary(moth_glm3)
 ## -ML = 458.89  Scale est. = 1         n = 419
 ```
 ]
+
+---
+
+# Negative binomial
+
+
+``` r
+library("glmmTMB")
+moth_glm4 &lt;- glmmTMB(parasitoid ~ moth + treatment + moth:treatment,
+    family = nbinom2("log"), REML = FALSE, data = moth)
+summary(moth_glm4)
+```
+
+```
+##  Family: nbinom2  ( log )
+## Formula:          parasitoid ~ moth + treatment + moth:treatment
+## Data: moth
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##    927.8    948.0   -458.9    917.8      414 
+## 
+## 
+## Dispersion parameter for nbinom2 family (): 0.263 
+## 
+## Conditional model:
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)            -0.7326     0.2175  -3.369 0.000754 ***
+## moth                    0.5445     0.1543   3.529 0.000417 ***
+## treatmenttreated        0.1632     0.2698   0.605 0.545237    
+## moth:treatmenttreated   0.0400     0.2195   0.182 0.855416    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+---
+
+# Visualising the model fit???
+
+
+``` r
+library("marginaleffects")
+moth_glm4 |&gt;
+    plot_predictions(condition = c("moth", "treatment"),
+        vcov = TRUE, type = "response")
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-9-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 class: inverse middle center subsection
@@ -1285,7 +1332,7 @@ layout(matrix(1:4, ncol = 2, byrow = TRUE))
 moth_glm1 |&gt; plot()
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-18-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-19-1.svg" style="display: block; margin: auto;" /&gt;
 
 ``` r
 layout(1)
@@ -1301,7 +1348,7 @@ library("gglm")
 moth_glm1 |&gt; gglm()
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-19-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-20-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1328,7 +1375,7 @@ Residuals vs. linear predictor plot
 ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-20-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-21-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1341,7 +1388,7 @@ ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 ggplot(data = moth_glm1) + stat_normal_qq() # plot(moth_glm1, which = 2)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-21-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-22-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1355,7 +1402,7 @@ library("gratia")
 qq_plot(moth_glm1, method = "simulate")
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-22-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-23-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1383,7 +1430,7 @@ Scale location plot
 ggplot(data = moth_glm1) + stat_scale_location() # plot(moth_glm1, which = 3)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-23-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-24-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1396,7 +1443,7 @@ Cooks distance vs. leverage &amp;mdash; influence of outliers
 ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-24-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-25-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1407,7 +1454,7 @@ ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 gglm(moth_glm1)    # Poisson
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-25-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-26-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1418,7 +1465,7 @@ gglm(moth_glm1)    # Poisson
 gglm(moth_glm3)    # Negative binomial
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-26-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-27-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1654,7 +1701,7 @@ There are three possible values: `Adelie`, `Chinstrap`, `Gentoo`
 gglm(model_slider)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-32-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-33-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1663,7 +1710,7 @@ gglm(model_slider)
 gglm(model_switch)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-33-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-34-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1684,7 +1731,7 @@ glm_switch &lt;- glm(body_mass_g ~ species, data = penguins, family = Gamma("log
 gglm(glm_slider)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-34-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-35-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1695,7 +1742,7 @@ gglm(glm_slider)
 gglm(glm_switch)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-35-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-36-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3155,7 +3202,7 @@ sim_lmm3 &lt;- simulateResiduals(chick_lmm3, plot = FALSE)
 plot(sim_lmm3)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-67-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-68-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3193,7 +3240,7 @@ sim_glmm1 &lt;- simulateResiduals(chick_glmm1, plot = FALSE)
 plot(sim_glmm1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-69-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-70-1.svg" style="display: block; margin: auto;" /&gt;
 
 --
 
@@ -3219,7 +3266,7 @@ sim_lmm4 &lt;- simulateResiduals(chick_lmm4, plot = FALSE)
 plot(sim_lmm4)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-71-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-72-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3356,7 +3403,7 @@ sim_gam1 &lt;- simulateResiduals(chick_gam1, plot = FALSE)
 plot(sim_gam1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-78-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-79-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
