@@ -1548,6 +1548,8 @@ Can obtain what `emtrends()` would give us by setting all variable not mentioned
 gnu_glm1 |> avg_predictions(newdata = "mean", variable = "death")
 ```
 
+---
+
 # Marginal effect at the mean
 
 ```{r}
