@@ -20,7 +20,7 @@ class: inverse middle center big-subsection
 ```{r setup, include=FALSE, cache=FALSE}
 options(htmltools.dir.version = FALSE)
 knitr::opts_chunk$set(cache = TRUE, dev = 'svg', echo = TRUE, message = FALSE, warning = FALSE,
-                      fig.height = 6, fig.width = 1.777777 * 6)
+                      fig.height = 6, fig.width = 1.777777 * 6, fig.align = "center")
 
 library('here')
 library('mgcv')
@@ -652,7 +652,7 @@ Jensen's inequality
 # Biological control of diamondback moths
 
 .small[
-Uefune et al (2020) studied the use of synthetic herbivory-induced plant volatiles (HIPVs) to attract larval parasitoid wasps (*Plutella xylostella*) to control diamondback moths (DBM: *Cotesia vestalis*), a global pest of cruciferous vegetables, in greenhouses growing mizuna (Japanese mustard) in Japan.
+Uefune et al (2020) studied the use of synthetic herbivory-induced plant volatiles (HIPVs) to attract larval parasitoid wasps (*Cotesia vestalis*) to control diamondback moths (DBM: *Plutella xylostella*), a global pest of cruciferous vegetables, in greenhouses growing mizuna (Japanese mustard) in Japan.
 
 They used two groups of greenhouses, the treated group having dispensers for the HIPVs as well as honeyfeeders to attract *C. vestalis* and a second untreated group. In each greenhouse, a single sticky trap, replaced weekly over 6 months, was used to catch both DBMs and *C. vestalis* and the numbers of both counted.
 
@@ -808,23 +808,27 @@ disp
 
 # Overdispersion
 
+.small[
 ```{r}
 moth_glm2 <- glm(parasitoid ~ moth + treatment + moth:treatment,
     family = quasipoisson, data = moth)
 
 summary(moth_glm2)
 ```
+]
 
 ---
 
 # Negative binomial
 
+.small[
 ```{r}
 library("mgcv")
 moth_glm3 <- gam(parasitoid ~ moth + treatment + moth * treatment,
     family = nb(), method = "ML", data = moth)
 summary(moth_glm3)
 ```
+]
 
 ---
 class: inverse middle center subsection
@@ -869,12 +873,14 @@ We will consider the number of small individuals
 
 # Better coffee-growing
 
+.small[
 ```{r}
 coffee_glm <- glm(specdens_small ~ canopy + midstrata + lowstrata + groundcov +
         treerichness + treeheight + coffeeheight,
     data = coffee, family = poisson)
 summary(coffee_glm)
 ```
+]
 
 ---
 
@@ -895,9 +901,11 @@ gnu <- readr::read_csv("../data/sinclair.csv")
 
 The 226 carcasses each could be placed into one of 12 cells of a 2 x 2 x 3 table, and we could model the cell count
 
+.small[
 ```{r}
 xtabs(gnus ~ death + sex + marrow, data = gnu)
 ```
+]
 
 ---
 
@@ -967,8 +975,115 @@ class: inverse middle center subsection
 
 # Model diagnostics
 
-```{r}
+```{r, fig.width = 6}
+layout(matrix(1:4, ncol = 2, byrow = TRUE))
 moth_glm1 |> plot()
+layout(1)
+```
+
+---
+
+# Model diagnostics
+
+```{r, fig.width = 6, cache = FALSE}
+library("gglm")
+moth_glm1 |> gglm()
+```
+
+---
+
+# Model diagnostics
+
+Four plots produced by `plot()` method
+
+1. Residuals vs. linear predictor plot
+
+2. (Normal) quantile-quantile (QQ) plot
+
+3. Scale-location plot
+
+4. Residuals vs. leverage plot
+
+---
+
+# Model diagnostics I
+
+Residuals vs. linear predictor plot
+
+```{r}
+ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
+```
+
+---
+
+# Model diagnostics II
+
+(Normal) quantile-quantile (QQ) plot
+
+```{r}
+ggplot(data = moth_glm1) + stat_normal_qq() # plot(moth_glm1, which = 2)
+```
+
+---
+
+# Model diagnostics II
+
+Nothing in theory requires deviance residuals to be Gaussian
+
+```{r}
+library("gratia")
+qq_plot(moth_glm1, method = "simulate")
+```
+
+---
+
+# Model diagnostics III
+
+Scale-location plot
+
+Can be difficult to assess increasing spread of residuals in the *residuals vs. linear predictor* plot
+
+Have to look at the upper and lower limits of the residuals
+
+A scale-location plot changes the y-axis so that it
+
+* Uses standardized residuals
+* Draws $\sqrt{| rs_i |}$
+
+---
+
+# Model diagnostics III
+
+Scale location plot
+
+```{r}
+ggplot(data = moth_glm1) + stat_scale_location() # plot(moth_glm1, which = 3)
+```
+
+---
+
+# Model diagnostics IV
+
+Cooks distance vs. leverage &mdash; influence of outliers
+
+```{r}
+ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
+```
+
+---
+
+# Model diagnostics &mdash; bad
+
+```{r}
+gglm(moth_glm1)    # Poisson
+```
+
+---
+
+# Model diagnostics &mdash; OK?
+
+```{r}
+gglm(moth_glm3)    # Negative binomial
 ```
 
 ---
@@ -1131,6 +1246,61 @@ There are three possible values: `Adelie`, `Chinstrap`, `Gentoo`
 `Chinstrap` penguins are `r round(coef(model_switch)[2], 1)` grams heavier than `Adelie`
 
 `Gentoo` penguins are `r round(coef(model_switch)[3], 1)` grams heavier than `Adelie`!
+
+---
+
+```{r}
+gglm(model_slider)
+```
+
+---
+
+```{r}
+gglm(model_switch)
+```
+
+---
+
+# What about GLM?
+
+```{r glm-penguins}
+glm_slider <- glm(body_mass_g ~ flipper_length_mm, data = penguins, family = Gamma("log"))
+glm_switch <- glm(body_mass_g ~ species, data = penguins, family = Gamma("log"))
+```
+
+---
+
+# What about GLM?
+
+```{r}
+gglm(glm_slider)
+```
+
+---
+
+# What about GLM?
+
+```{r}
+gglm(glm_switch)
+```
+
+---
+
+# What about GLM?
+
+Coefficients are on the *link* scale! &mdash; here that's the log scale
+
+```{r, dependson = "glm-penguins"}
+tidy(glm_slider)
+```
+
+`flipper_length_mm` is a continuous variable, so it's a slider
+
+As `flipper_length_mm` increases by 1 mm, penguin `body_mass_g` is multiplied by `r round(exp(coef(glm_slider)[2]), 3)` grams
+
+```{r}
+exp(0.0115)
+```
 
 ---
 
@@ -1302,6 +1472,9 @@ Thankfully the *marginaleffects* package has us covered
 library("marginaleffects")
 gnu_glm1 |> avg_slopes(variable = "death")
 ```
+---
+
+# Comparisons
 
 Can also call this a comparison if you prefer
 
@@ -1351,6 +1524,11 @@ Can obtain what `emtrends()` would give us by setting all variable not mentioned
 
 ```{r}
 gnu_glm1 |> avg_predictions(newdata = "mean", variable = "death")
+```
+
+# Marginal effect at the mean
+
+```{r}
 gnu_glm1 |> avg_comparisons(newdata = "mean", variable = "death")
 ```
 
@@ -2231,7 +2409,7 @@ plot(sim_gam1)
 
 # GA(M)M
 
-```{r}
+```{r chick-gam-model-1}
 chick_gam2 <- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
     data = ChickWeight, method = "fREML", family = Gamma(link = "log"))
 sim_gam2 <- simulateResiduals(chick_gam2, plot = FALSE)
@@ -2242,7 +2420,7 @@ plot(sim_gam2)
 
 # GA(M)M
 
-```{r}
+```{r chick-gam-model-2}
 chick_gam3 <- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
     data = ChickWeight, method = "fREML", family = tw(link = "log"), discrete = TRUE, n.threads = 3)
 sim_gam3 <- simulateResiduals(chick_gam3, plot = FALSE)
@@ -2253,6 +2431,6 @@ plot(sim_gam3)
 
 # Re-use
 
-Copyright © (2015&ndash;2023) Gavin L. Simpson Some Rights Reserved
+Copyright © (2015&ndash;2025) Gavin L. Simpson Some Rights Reserved
 
 Unless indicated otherwise, this slide deck is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).

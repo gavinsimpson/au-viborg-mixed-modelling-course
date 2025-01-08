@@ -150,7 +150,7 @@ dbinom(x = 7, size = 10, prob = 0.7)
 
 # Binomial distribution
 
-![](index_files/figure-html/binomial-pdf-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/binomial-pdf-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -164,7 +164,7 @@ Has a single parameter `\(\lambda\)` the average density or arrival rate
 
 # Poisson distribution
 
-![](index_files/figure-html/poisson-pdf-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/poisson-pdf-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -461,7 +461,7 @@ ggplot(wasp, aes(x = leafHeight,
 ]
 
 .col-6[
-![](index_files/figure-html/predict-darlingtonia-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/predict-darlingtonia-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 
 ]
@@ -556,7 +556,7 @@ ggplot(maddy, aes(x = midDepth, y = calMid)) +
 ]
 
 .col-6[
-![](index_files/figure-html/plot-maddy-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/plot-maddy-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -634,7 +634,7 @@ p1
 ]
 
 .col-6[
-![](index_files/figure-html/plot-maddy-fitted-gamma-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/plot-maddy-fitted-gamma-1.svg" style="display: block; margin: auto;" /&gt;
 
 ]
 ]
@@ -679,7 +679,7 @@ p2
 ]
 
 .col-6[
-![](index_files/figure-html/plot-maddy-fitted-gaussian-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/plot-maddy-fitted-gaussian-1.svg" style="display: block; margin: auto;" /&gt;
 
 ]
 ]
@@ -692,7 +692,7 @@ library("patchwork")
 p1 + p2
 ```
 
-![](index_files/figure-html/unnamed-chunk-4-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-4-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -720,7 +720,7 @@ Jensen's inequality
 # Biological control of diamondback moths
 
 .small[
-Uefune et al (2020) studied the use of synthetic herbivory-induced plant volatiles (HIPVs) to attract larval parasitoid wasps (*Plutella xylostella*) to control diamondback moths (DBM: *Cotesia vestalis*), a global pest of cruciferous vegetables, in greenhouses growing mizuna (Japanese mustard) in Japan.
+Uefune et al (2020) studied the use of synthetic herbivory-induced plant volatiles (HIPVs) to attract larval parasitoid wasps (*Cotesia vestalis*) to control diamondback moths (DBM: *Plutella xylostella*), a global pest of cruciferous vegetables, in greenhouses growing mizuna (Japanese mustard) in Japan.
 
 They used two groups of greenhouses, the treated group having dispensers for the HIPVs as well as honeyfeeders to attract *C. vestalis* and a second untreated group. In each greenhouse, a single sticky trap, replaced weekly over 6 months, was used to catch both DBMs and *C. vestalis* and the numbers of both counted.
 
@@ -912,7 +912,7 @@ moth |&gt;
 ]
 
 .col-6[
-![](index_files/figure-html/plot-moth-glm1-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/plot-moth-glm1-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -958,6 +958,7 @@ disp
 
 # Overdispersion
 
+.small[
 
 ``` r
 moth_glm2 &lt;- glm(parasitoid ~ moth + treatment + moth:treatment,
@@ -989,11 +990,13 @@ summary(moth_glm2)
 ## 
 ## Number of Fisher Scoring iterations: 6
 ```
+]
 
 ---
 
 # Negative binomial
 
+.small[
 
 ``` r
 library("mgcv")
@@ -1023,6 +1026,7 @@ summary(moth_glm3)
 ## R-sq.(adj) =   -116   Deviance explained = 22.5%
 ## -ML = 458.89  Scale est. = 1         n = 419
 ```
+]
 
 ---
 class: inverse middle center subsection
@@ -1067,6 +1071,7 @@ We will consider the number of small individuals
 
 # Better coffee-growing
 
+.small[
 
 ``` r
 coffee_glm &lt;- glm(specdens_small ~ canopy + midstrata + lowstrata + groundcov +
@@ -1101,6 +1106,7 @@ summary(coffee_glm)
 ## 
 ## Number of Fisher Scoring iterations: 5
 ```
+]
 
 ---
 
@@ -1120,6 +1126,7 @@ gnu &lt;- readr::read_csv("data/sinclair.csv")
 
 The 226 carcasses each could be placed into one of 12 cells of a 2 x 2 x 3 table, and we could model the cell count
 
+.small[
 
 ``` r
 xtabs(gnus ~ death + sex + marrow, data = gnu)
@@ -1147,6 +1154,7 @@ xtabs(gnus ~ death + sex + marrow, data = gnu)
 ##   Other     16 26
 ##   Predation  8 10
 ```
+]
 
 ---
 
@@ -1273,10 +1281,144 @@ class: inverse middle center subsection
 
 
 ``` r
+layout(matrix(1:4, ncol = 2, byrow = TRUE))
 moth_glm1 |&gt; plot()
 ```
 
-![](index_files/figure-html/unnamed-chunk-18-1.svg)&lt;!-- --&gt;![](index_files/figure-html/unnamed-chunk-18-2.svg)&lt;!-- --&gt;![](index_files/figure-html/unnamed-chunk-18-3.svg)&lt;!-- --&gt;![](index_files/figure-html/unnamed-chunk-18-4.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-18-1.svg" style="display: block; margin: auto;" /&gt;
+
+``` r
+layout(1)
+```
+
+---
+
+# Model diagnostics
+
+
+``` r
+library("gglm")
+moth_glm1 |&gt; gglm()
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-19-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics
+
+Four plots produced by `plot()` method
+
+1. Residuals vs. linear predictor plot
+
+2. (Normal) quantile-quantile (QQ) plot
+
+3. Scale-location plot
+
+4. Residuals vs. leverage plot
+
+---
+
+# Model diagnostics I
+
+Residuals vs. linear predictor plot
+
+
+``` r
+ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-20-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics II
+
+(Normal) quantile-quantile (QQ) plot
+
+
+``` r
+ggplot(data = moth_glm1) + stat_normal_qq() # plot(moth_glm1, which = 2)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-21-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics II
+
+Nothing in theory requires deviance residuals to be Gaussian
+
+
+``` r
+library("gratia")
+qq_plot(moth_glm1, method = "simulate")
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-22-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics III
+
+Scale-location plot
+
+Can be difficult to assess increasing spread of residuals in the *residuals vs. linear predictor* plot
+
+Have to look at the upper and lower limits of the residuals
+
+A scale-location plot changes the y-axis so that it
+
+* Uses standardized residuals
+* Draws `\(\sqrt{| rs_i |}\)`
+
+---
+
+# Model diagnostics III
+
+Scale location plot
+
+
+``` r
+ggplot(data = moth_glm1) + stat_scale_location() # plot(moth_glm1, which = 3)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-23-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics IV
+
+Cooks distance vs. leverage &amp;mdash; influence of outliers
+
+
+``` r
+ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-24-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics &amp;mdash; bad
+
+
+``` r
+gglm(moth_glm1)    # Poisson
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-25-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics &amp;mdash; OK?
+
+
+``` r
+gglm(moth_glm3)    # Negative binomial
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-26-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1400,7 +1542,7 @@ class: inverse middle center subsection
 
 # Regression coefficients
 
-&lt;img src="resources/slider-switch-annotated-80.jpg" width="2561" /&gt;
+&lt;img src="resources/slider-switch-annotated-80.jpg" width="2561" style="display: block; margin: auto;" /&gt;
 
 Terms in models are like sliders and switches
 
@@ -1507,9 +1649,91 @@ There are three possible values: `Adelie`, `Chinstrap`, `Gentoo`
 
 ---
 
+
+``` r
+gglm(model_slider)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-32-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+
+``` r
+gglm(model_switch)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-33-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What about GLM?
+
+
+``` r
+glm_slider &lt;- glm(body_mass_g ~ flipper_length_mm, data = penguins, family = Gamma("log"))
+glm_switch &lt;- glm(body_mass_g ~ species, data = penguins, family = Gamma("log"))
+```
+
+---
+
+# What about GLM?
+
+
+``` r
+gglm(glm_slider)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-34-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What about GLM?
+
+
+``` r
+gglm(glm_switch)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-35-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What about GLM?
+
+Coefficients are on the *link* scale! &amp;mdash; here that's the log scale
+
+
+``` r
+tidy(glm_slider)
+```
+
+```
+## # A tibble: 2 × 5
+##   term              estimate std.error statistic   p.value
+##   &lt;chr&gt;                &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)         6.02    0.0755        79.7 4.07e-218
+## 2 flipper_length_mm   0.0115  0.000375      30.7 9.09e- 99
+```
+
+`flipper_length_mm` is a continuous variable, so it's a slider
+
+As `flipper_length_mm` increases by 1 mm, penguin `body_mass_g` is multiplied by 1.012 grams
+
+
+``` r
+exp(0.0115)
+```
+
+```
+## [1] 1.011566
+```
+
+---
+
 # Mixers
 
-&lt;img src="resources/mixer-board-annotated-80.jpg" width="2561" /&gt;
+&lt;img src="resources/mixer-board-annotated-80.jpg" width="2561" style="display: block; margin: auto;" /&gt;
 
 Most models aren't so simple
 
@@ -1819,6 +2043,9 @@ gnu_glm1 |&gt; avg_slopes(variable = "death")
 ## Comparison: Predation - Other
 ## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted
 ```
+---
+
+# Comparisons
 
 Can also call this a comparison if you prefer
 
@@ -1933,6 +2160,9 @@ gnu_glm1 |&gt; avg_predictions(newdata = "mean", variable = "death")
 ## Type:  response 
 ## Columns: death, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
 ```
+
+# Marginal effect at the mean
+
 
 ``` r
 gnu_glm1 |&gt; avg_comparisons(newdata = "mean", variable = "death")
@@ -2311,7 +2541,7 @@ Two types of *simple random effects* that we'll consider
 
 # Simple random effects
 
-![](index_files/figure-html/random-effects-cartoon-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/random-effects-cartoon-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 class: inverse middle center subsection
@@ -2457,7 +2687,7 @@ ggplot(aes(Time, estimate, level = Chick)) +
 ]
 
 .col-6[
-![](index_files/figure-html/predictions-chick-lmm1-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/predictions-chick-lmm1-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -2493,7 +2723,7 @@ pop_chick_lmm1 |&gt;
 ]
 
 .col-6[
-![](index_files/figure-html/pop-predictions-chick-lmm1-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/pop-predictions-chick-lmm1-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -2604,7 +2834,7 @@ ggplot(aes(Time, estimate, level = Chick)) +
 ]
 
 .col-6[
-![](index_files/figure-html/predictions-chick-lmm2-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/predictions-chick-lmm2-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -2641,7 +2871,7 @@ pop_chick_lmm2 |&gt;
 ]
 
 .col-6[
-![](index_files/figure-html/pop-predictions-chick-lmm2-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/pop-predictions-chick-lmm2-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -2753,7 +2983,7 @@ ggplot(aes(Time, estimate, level = Chick)) +
 ]
 
 .col-6[
-![](index_files/figure-html/predictions-chick-lmm3-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/predictions-chick-lmm3-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -2790,7 +3020,7 @@ pop_chick_lmm3 |&gt;
 ]
 
 .col-6[
-![](index_files/figure-html/pop-predictions-chick-lmm3-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/pop-predictions-chick-lmm3-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
 
@@ -2925,7 +3155,7 @@ sim_lmm3 &lt;- simulateResiduals(chick_lmm3, plot = FALSE)
 plot(sim_lmm3)
 ```
 
-![](index_files/figure-html/unnamed-chunk-52-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-67-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -2963,7 +3193,7 @@ sim_glmm1 &lt;- simulateResiduals(chick_glmm1, plot = FALSE)
 plot(sim_glmm1)
 ```
 
-![](index_files/figure-html/unnamed-chunk-54-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-69-1.svg" style="display: block; margin: auto;" /&gt;
 
 --
 
@@ -2989,7 +3219,7 @@ sim_lmm4 &lt;- simulateResiduals(chick_lmm4, plot = FALSE)
 plot(sim_lmm4)
 ```
 
-![](index_files/figure-html/unnamed-chunk-56-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-71-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3126,7 +3356,7 @@ sim_gam1 &lt;- simulateResiduals(chick_gam1, plot = FALSE)
 plot(sim_gam1)
 ```
 
-![](index_files/figure-html/unnamed-chunk-63-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-78-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3140,7 +3370,7 @@ sim_gam2 &lt;- simulateResiduals(chick_gam2, plot = FALSE)
 plot(sim_gam2)
 ```
 
-![](index_files/figure-html/unnamed-chunk-64-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/chick-gam-model-1-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3154,13 +3384,13 @@ sim_gam3 &lt;- simulateResiduals(chick_gam3, plot = FALSE)
 plot(sim_gam3)
 ```
 
-![](index_files/figure-html/unnamed-chunk-65-1.svg)&lt;!-- --&gt;
+&lt;img src="index_files/figure-html/chick-gam-model-2-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
 # Re-use
 
-Copyright © (2015&amp;ndash;2023) Gavin L. Simpson Some Rights Reserved
+Copyright © (2015&amp;ndash;2025) Gavin L. Simpson Some Rights Reserved
 
 Unless indicated otherwise, this slide deck is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
     </textarea>
