@@ -2662,6 +2662,14 @@ plot(sim_gam3)
 
 ---
 
+# GA(M)m
+
+```{r}
+chick_gam3 |> plot_predictions(condition = c("Time", "Diet"))
+```
+
+---
+
 # Re-use
 
 Copyright © (2015&ndash;2025) Gavin L. Simpson Some Rights Reserved
