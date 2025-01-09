@@ -3633,7 +3633,7 @@ plot(sim_gam2)
 
 ``` r
 chick_gam3 &lt;- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
-    data = ChickWeight, method = "fREML", family = tw(link = "log"), discrete = TRUE, n.threads = 3)
+    data = ChickWeight, method = "fREML", family = tw(link = "log"))
 sim_gam3 &lt;- simulateResiduals(chick_gam3, plot = FALSE)
 plot(sim_gam3)
 ```
@@ -3651,6 +3651,18 @@ chick_gam3 |&gt; plot_predictions(condition = c("Time", "Diet"),
 ```
 
 &lt;img src="index_files/figure-html/unnamed-chunk-80-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Model diagnostics plots for MM
+
+
+``` r
+library("performance")
+check_model(chick_glmm1)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-81-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 

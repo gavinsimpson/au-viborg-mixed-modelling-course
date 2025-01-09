@@ -2655,7 +2655,7 @@ plot(sim_gam2)
 
 ```{r chick-gam-model-2}
 chick_gam3 <- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
-    data = ChickWeight, method = "fREML", family = tw(link = "log"), discrete = TRUE, n.threads = 3)
+    data = ChickWeight, method = "fREML", family = tw(link = "log"))
 sim_gam3 <- simulateResiduals(chick_gam3, plot = FALSE)
 plot(sim_gam3)
 ```
@@ -2667,6 +2667,15 @@ plot(sim_gam3)
 ```{r}
 chick_gam3 |> plot_predictions(condition = c("Time", "Diet"),
     exclude = "s(Time,Chick)")
+```
+
+---
+
+# Model diagnostics plots for MM
+
+```{r}
+library("performance")
+check_model(chick_glmm1)
 ```
 
 ---
