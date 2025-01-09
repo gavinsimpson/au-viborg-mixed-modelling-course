@@ -2435,34 +2435,6 @@ At intervals during the summer and autumn, two or four strips were removed from 
 
 ---
 
-# Clover Seeds
-
-As the species studied all belong to the genus *Trifolium* they are expected to have some characteristics in common, but no prior information is available to us concerning the seed-softening behaviour of the individual species.
-
-* Decide whether "species" should be specified as a fixed-effect or a random-effect term in the model to be fitted to these data and explain your decision.
-
----
-
-# Clover Seeds
-
-* Specify a regression model for this experiment. Following your decision concerning "species", which term(s) in the model should be regarded as fixed and which as random? What is the response variable?
-
----
-
-# Clover Seeds
-
-* Fit your mixed model to the data, specifying an appropriate error distribution for the response variable, and an appropriate link function to relate the response variable to the linear model.
-
-* Consider whether there is evidence that any terms can be omitted from the model. If so, fit the modified model to the data.
-
----
-
-# Clover Seeds
-
-* Make a graphical display, showing the fitted relationship between the proportion of hard seed remaining for each species and the time elapsed since the start of exposure, and showing the scatter of the observed values around this relationship.
-
----
-
 # Clover seeds load data
 
 ```{r, echo = TRUE, eval = FALSE, echo = TRUE}
@@ -2488,6 +2460,42 @@ library("lme4")
 ```{r}
 clover
 ```
+
+---
+
+# Clover seeds
+
+```{r}
+clover |> glimpse()
+```
+
+---
+
+# Clover Seeds
+
+As the species studied all belong to the genus *Trifolium* they are expected to have some characteristics in common, but no prior information is available to us concerning the seed-softening behaviour of the individual species.
+
+* Decide whether "species" should be specified as a fixed-effect or a random-effect term in the model to be fitted to these data and explain your decision.
+
+---
+
+# Clover Seeds
+
+* Specify a regression model for this experiment. Following your decision concerning "species", which term(s) in the model should be regarded as fixed and which as random? What is the response variable?
+
+---
+
+# Clover Seeds
+
+* Fit your mixed model to the data, specifying an appropriate error distribution for the response variable, and an appropriate link function to relate the response variable to the linear model.
+
+* Consider whether there is evidence that any terms can be omitted from the model. If so, fit the modified model to the data.
+
+---
+
+# Clover Seeds
+
+* Make a graphical display, showing the fitted relationship between the proportion of hard seed remaining for each species and the time elapsed since the start of exposure, and showing the scatter of the observed values around this relationship.
 
 ---
 
