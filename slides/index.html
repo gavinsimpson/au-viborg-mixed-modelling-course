@@ -3646,7 +3646,8 @@ plot(sim_gam3)
 
 
 ``` r
-chick_gam3 |&gt; plot_predictions(condition = c("Time", "Diet"))
+chick_gam3 |&gt; plot_predictions(condition = c("Time", "Diet"),
+    exclude = "s(Time,Chick)")
 ```
 
 &lt;img src="index_files/figure-html/unnamed-chunk-80-1.svg" style="display: block; margin: auto;" /&gt;

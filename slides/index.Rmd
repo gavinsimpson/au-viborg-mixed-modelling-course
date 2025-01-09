@@ -2665,7 +2665,8 @@ plot(sim_gam3)
 # GA(M)m
 
 ```{r}
-chick_gam3 |> plot_predictions(condition = c("Time", "Diet"))
+chick_gam3 |> plot_predictions(condition = c("Time", "Diet"),
+    exclude = "s(Time,Chick)")
 ```
 
 ---
