@@ -2230,6 +2230,10 @@ gnu_glm1 |&gt; avg_comparisons(newdata = "mean", variable = "death")
 
 That's quite different!
 
+???
+
+The average marginal effect is ~6 but the marginal effect at the mean is 20!
+
 ---
 
 # Marginal effect at the mean
@@ -2251,7 +2255,7 @@ datagrid(model = gnu_glm1, death = c("Predation", "Other"))
 
 # MEM vs AME
 
-These will become the same once we ask for comparisons/slopes conditioned on `sex` and `marrow` as now there is nothign else to average in the AME
+These will become the same once we ask for comparisons/slopes conditioned on `sex` and `marrow` as now there is nothing else to average in the AME
 
 .small[
 
@@ -2332,33 +2336,9 @@ gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"))
 
 What are we comparing here?
 
----
+--
 
-# Comparisons
-
-With
-
-.small[
-
-``` r
-gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"))
-```
-
-```
-## 
-##  Contrast Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %
-##  SWF - OG   -15.00       3.22 -4.657   &lt;0.001 18.2 -21.31  -8.69
-##  TG - OG    -13.25       3.29 -4.030   &lt;0.001 14.1 -19.69  -6.81
-##  TG - SWF     1.75       2.66  0.659     0.51  1.0  -3.46   6.96
-## 
-## Term: marrow
-## Type:  response 
-## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high
-```
-]
-
-We are averaging the comparisons of the levels of `marrow` over the other variables in the model
-
+We are averaging the comparisons of the levels of `marrow` over the other variables in the model (`sex`, `death`)
 ---
 
 # Comparisons
@@ -2470,6 +2450,12 @@ gnu_glm1 |&gt; avg_comparisons(variables = list(marrow = "pairwise"),
 ```
 ]
 
+--
+
+Adjustment here controls the false discovery rate (FDR)
+
+Other options available, but FDR is a reasonable choice
+
 ---
 class: inverse middle center subsection
 
@@ -2512,15 +2498,15 @@ Instead try to estimate the parameters of the distribution(s) of the random vari
 
 The correlations arise from e.g. being in the same experimental block
 
-- *patients* within *hospitals*
+- *technical replicates* within *biological replicates*
 - *students* within *classes* within *schools*
 
 This structure suggests multiple levels of variation
 
 - variation *within* a block&amp;mdash; `\(\sigma^2_{\mathsf{within}}\)`
-    - differences between patients within a single hospital
+    - between technical reps within a single biological rep
 - variation *between* blocks&amp;mdash; `\(\sigma^2_{\mathsf{between}}\)`
-    - differences between hospitals in patient waiting times
+    - between biological reps
 
 ---
 
@@ -2544,7 +2530,7 @@ With random effects we try to quantify the variability in effect of `\(x\)` in e
 
 **Frequentists** define random effects as categorical variables whose levels are drawn **randomly** from the set of all possible levels
 
-- random sample of hospitals from set of all hospitals
+- random sample of biological reps from set of all biological reps
 
 **Bayesians** define random effects as variables whose parameters come from a particular distribution
 
@@ -2553,6 +2539,7 @@ If you observed *all* hospitals of relevance, frequentist view means you can't t
 Use random effect if variable is representative of the population you are studying
 
 ---
+
 # When to use a random effect?
 
 .small[
@@ -2570,6 +2557,48 @@ When to use a random effects (after Bolker 2015 in Fox *et al* (Eds) (2015) *Eco
 
 Don't use random effects if you have fewer than **5** levels&amp;mdash;treat it as a fixed categorical variable instead
 ]
+
+---
+
+# New styles random effects
+
+A lot of what is written about random effects represents a traditional, frequentist philosophy
+
+Often refer to these as *old style random effects*
+
+Lots of things also look, walk, and quack like a random effect --- e.g. penalized splines
+
+They have the same mathematical form
+
+These are *new style random effects*
+
+---
+
+# New styles random effects
+
+This *new style* philosophy essentially states that we use the random effects as a convenience
+
+Convenience is to estimate things of interest
+
+*Penalized splines* are random effects, but we don't think of them as random draws from a population of possible splines
+
+--
+
+Basically, we can relax a little about some of the formal requirements for ranodm efects
+
+Especially if using them to account for things not of primary interest
+
+---
+
+# New style random effects
+
+The main exception is one of practicality
+
+Most mixed model software is formulated from the classic random effects model
+
+Estimating a variance &amp;mdash; that requires sufficient observations
+
+Hence the rule about minimum 5 or 6 levels in the random effect variable
 
 ---
 
@@ -2647,7 +2676,7 @@ b_i      &amp;= \beta_0 + v_i \\
 
 `\(i\)` indexes the `Chick` &amp; `\(j\)` indexes the measurements across `Time`
 
-`\(a_i\)` intercept &amp; `\(b_i\)` slopes are random with covariance `\(\sigma_{uv}\)`
+`\(a_i\)` intercepts &amp; `\(b_i\)` slopes are random with covariance `\(\sigma_{uv}\)`
 
 `\(\alpha_0\)` &amp; `\(\beta_0\)` are the population-level effects
 
@@ -2668,7 +2697,7 @@ chick_lmm1 &lt;- lmer(weight ~ 1 + Time + (1 + Time | Chick),
 
 `(1 + Time | Chick)` specifies the random effects &amp;mdash; a random intercept and effect of `Time` for each `Chick`
 
-`1` is an intercept
+`1` means an intercept &amp;mdash; not strictly necessary in the fixed effects part
 
 ---
 
@@ -2775,6 +2804,19 @@ pop_chick_lmm1 |&gt;
 &lt;img src="index_files/figure-html/pop-predictions-chick-lmm1-1.svg" style="display: block; margin: auto;" /&gt;
 ]
 ]
+
+---
+
+# Population level effect
+
+More simply, once you understand the recipe:
+
+
+``` r
+chick_lmm1 |&gt; plot_predictions(condition = c("Time"), re.form = NA)
+```
+
+&lt;img src="index_files/figure-html/chick-pop-level-eff-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -2926,6 +2968,19 @@ pop_chick_lmm2 |&gt;
 
 ---
 
+# Population level effect
+
+Or, more simply with `plot_predictions()`
+
+
+``` r
+chick_lmm2 |&gt; plot_predictions(condition = c("Time", "Diet"), re.form = NA)
+```
+
+&lt;img src="index_files/figure-html/chick-pop-plot-predictions-lmm2-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+
 # Problems?
 
 Can you identify any issues with this model?
@@ -2945,7 +3000,11 @@ b_i      &amp;= \beta_0 + \beta_1 \mathtt{Diet}_i + v_i \\
 \begin{bmatrix} u_i \\ v_i \end{bmatrix} &amp;\sim \operatorname{Normal} \begin{pmatrix} \begin{bmatrix} 0 \\ 0 \end{bmatrix} , \begin{bmatrix} \sigma_u^2 &amp; \\ \sigma_{uv} &amp; \sigma_v^2 \end{bmatrix} \end{pmatrix}
 \end{align*}`
 
-We remove the population-level effect of `Diet` from the previous model `\(\alpha_1\)`
+We remove the population-level effect of `Diet` from the previous model'a `\(a_i\)`
+
+???
+
+Note that `\(\alpha_1 \mathtt{Diet}_i\)` is removed from the `\(a_i\)` line
 
 ---
 
@@ -3075,6 +3134,36 @@ pop_chick_lmm3 |&gt;
 
 ---
 
+# Population level effects
+
+.row[
+
+.col-6[
+
+
+``` r
+chick_lmm2 |&gt; plot_predictions(condition = c("Time", "Diet"), re.form = NA)
+```
+
+&lt;img src="index_files/figure-html/chick-pop-plot-predictions-lmm2-1.svg" style="display: block; margin: auto;" /&gt;
+
+]
+
+.col-6[
+
+
+``` r
+chick_lmm3 |&gt; plot_predictions(condition = c("Time", "Diet"), re.form = NA)
+```
+
+&lt;img src="index_files/figure-html/chick-pop-plot-predictions-lmm3-1.svg" style="display: block; margin: auto;" /&gt;
+
+]
+
+]
+
+---
+
 # Estimated growth rates
 
 
@@ -3143,6 +3232,22 @@ chick_lmm3 |&gt; avg_comparisons(variables = "Time", by = "Diet", hypothesis = "
 
 ---
 
+# Maximal model
+
+For strict compatibility with a repeated measures ANOVA we need what is know as the *maximal random effects model*
+
+We have the same formula in the random effects as the fixed effects
+
+
+``` r
+chick_lmm4 &lt;- lmer(weight ~ 1 + Time + Time:Diet + (1 + Time + Time:Diet | Chick),
+  data = ChickWeight)
+```
+
+You can then peel off a layer from the random effects using AIC or LRT if you encounter warnings while fitting (as we do here)
+
+---
+
 # Model diagnostics
 
 Misspecification of GL(M)Ms cannot be reliably diagnosed with standard residual plot
@@ -3204,7 +3309,7 @@ sim_lmm3 &lt;- simulateResiduals(chick_lmm3, plot = FALSE)
 plot(sim_lmm3)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-68-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-67-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3242,7 +3347,7 @@ sim_glmm1 &lt;- simulateResiduals(chick_glmm1, plot = FALSE)
 plot(sim_glmm1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-70-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-69-1.svg" style="display: block; margin: auto;" /&gt;
 
 --
 
@@ -3250,13 +3355,13 @@ Nope!
 
 ---
 
-# ???
+# Non-linear growth?
 
 
 ``` r
-chick_lmm4 &lt;- lmer(weight ~ 1 + poly(Time, 2) + poly(Time, 2):Diet + (1 + poly(Time, 2) | Chick),
+chick_lmm5 &lt;- lmer(weight ~ 1 + poly(Time, 2) + poly(Time, 2):Diet + (1 + poly(Time, 2) | Chick),
     data = ChickWeight)
-sim_lmm4 &lt;- simulateResiduals(chick_lmm4, plot = FALSE)
+sim_lmm5 &lt;- simulateResiduals(chick_lmm5, plot = FALSE)
 ```
 
 ---
@@ -3265,10 +3370,10 @@ sim_lmm4 &lt;- simulateResiduals(chick_lmm4, plot = FALSE)
 
 
 ``` r
-plot(sim_lmm4)
+plot(sim_lmm5)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-72-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-71-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3405,7 +3510,7 @@ sim_gam1 &lt;- simulateResiduals(chick_gam1, plot = FALSE)
 plot(sim_gam1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-79-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-78-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
