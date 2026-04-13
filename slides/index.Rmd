@@ -1,8 +1,8 @@
 ---
-title: "Applied mixed modelling with R"
+title: "Applied regression modelling with R"
 institute: "Department of Animal & Veterinary Sciences · Aarhus University"
 author: "Gavin Simpson"
-date: "0930&ndash;1600 CET 7<sup>th</sup>&ndash;16<sup>th</sup> January 2025"
+date: "0900&ndash;1600 CET 14<sup>th</sup>&ndash;16<sup>th</sup> April 2026"
 output:
   xaringan::moon_reader:
     css: ['default', 'https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css', 'slides.css']
@@ -32,6 +32,7 @@ library('tidyr')
 library('readr')
 library("dplyr")
 library("forcats")
+library("ggokabeito")
 ## plot defaults
 theme_set(theme_minimal(base_size = 16, base_family = 'Fira Sans'))
 
@@ -98,6 +99,83 @@ library("tibble")
 library("here")
 library("ggplot2")
 ```
+---
+class: inverse middle center subsection
+
+# Why model?
+
+---
+
+# Why model?
+
+> Models encapsulate understanding of a biological process into a deterministic process
+
+* Mathematical models
+* Simulation models
+
+> Estimating effects, testing hypotheses, interpreting data
+
+* Statistical models
+
+---
+
+# Mathematical models
+
+Equations derived from basic principles & scientific understanding
+
+Mathematical description &rarr; simplification &rarr; general predictions
+
+* Lotka-Voltera competition models
+* Unified neutral theory
+
+\begin{align}
+\frac{dN_1}{dt} & = r_1N_1\left ( 1 - \frac{N_1}{K_1} - \frac{\alpha_{12}N_2}{K_1} \right )\\
+\frac{dN_2}{dt} & = r_2N_2\left ( 1 - \frac{N_2}{K_2} - \frac{\alpha_{12}N_1}{K_2} \right )
+\end{align}
+
+---
+
+# Simulation models
+
+A set of interacting modules that encapsulate physical or biological processes
+
+Parameterised using literature values & run on powerful computers
+
+* General Circulation Models
+* NASA amopsheric CO~2~ 
+
+```{r sim-model, fig.align="center", out.width="50%", echo=FALSE}
+knitr::include_graphics("resources/co2-model.png")
+```
+---
+
+# Statistical models
+
+Fit statistical models to data &rarr; estimate parameters &rarr; assess uncertainty
+
+Generally used to test **scientific hypotheses** operationalised as a statistical model
+
+```{r statistical-model-example, echo = FALSE, fig.align="center", out.width="60%"}
+set.seed(1)
+df <- data.frame(x = runif(100))
+df <- transform(df, y = 2 + (0.85 * x) + rnorm(100, sd = 0.25))
+ggplot(df, aes(x = x, y = y)) +
+    geom_point() +
+    geom_smooth(method = "lm")
+```
+
+---
+
+# Statistical inference
+
+**Statistical inference** is the process of deducing properties of an underlying distribution by analysis of data
+
+Two broad approaches to statistical inference
+
+1. Frequentist inference
+2. Bayesian inference
+
+We will stick to frequentist (or likelihood-ist really) for this course
 
 ---
 class: inverse middle center subsection
@@ -106,9 +184,41 @@ class: inverse middle center subsection
 
 ---
 
+# Linear models
+
+The linear model behind the data we saw a couple of slides ago was
+
+$$ \hat{y}_i = 2 + (0.85 \times x_i) $$
+
+This is the equation of a straight line, more generally
+
+$$ \hat{y}_i = b + (a \times x_i) $$
+
+$$ \hat{y}_i = \beta_0 + \beta_1 x_i $$
+
+> Q: What values can this model predict for $y_i$?
+
+---
+
+# Linear models
+
+The problem with using linear models is that
+
+1. They can predict values for $y_i$ that are biologically nonsensical,
+
+2. They fail to capture the mean-variance relationships commonly encountered in biological data
+
+We could transform $y_i$ but then we would be modelling something other than $\hat{y_i}$, which statisticians call the expected value of $Y$
+
+$$ \mathbb{E}(y_i) $$
+
+Usually we are interested in $\mathbb{E}(y_i)$, not $\mathbb{E}(\log(y_i))$
+
+---
+
 # Generalized linear models
 
-Generalised linear models (GLMs) are an extension of linear regression plus Poisson, logistic and other regression models
+Generalised linear models (GLMs) are an extension of linear regression & include Poisson, logistic and other regression models
 
 GLMs extend the types of data and error distributions that can be modelled beyond the Gaussian data of linear regression
 
@@ -159,8 +269,9 @@ binom.pmf <- transform(binom.pmf,
                        pmf = dbinom(x, size = n, prob = p),
                        params = paste("n=", n, "; p=", p, sep = ""))
 
-plt.binom <- ggplot(binom.pmf, aes(x = x, y = pmf, colour = params)) +
-    geom_point() + labs(y = "Probability Mass", x = "No. of Successes")
+plt.binom <- ggplot(binom.pmf, aes(x = x, y = pmf, fill = params)) +
+    geom_col() + labs(y = "Probability Mass", x = "No. of Successes") +
+    facet_wrap(~ params) + scale_fill_okabe_ito()
 plt.binom
 ```
 
@@ -184,10 +295,23 @@ poisson.pmf <- transform(poisson.pmf,
                          pmf = dpois(x, lambda = lambda),
                          params = paste("lambda=", lambda, sep = ""))
 
-plt.poisson <- ggplot(poisson.pmf, aes(x = x, y = pmf, colour = params)) +
-    geom_point() + labs(y = "Probability Mass", x = "Count")
+plt.poisson <- ggplot(poisson.pmf, aes(x = x, y = pmf, fill = params)) +
+    geom_col() + labs(y = "Probability Mass", x = "Count") +
+    facet_wrap(~ params) + scale_fill_okabe_ito()
 plt.poisson
 ```
+
+---
+
+# Exponential family
+
+The binomial and Poisson distributions are part of a larger family **exponential family**
+
+Also include the Gaussian distribution
+
+GLMs *sensu stricto* were created for members of the **exponential [dispersion] family**
+
+General ideas we will discuss today extend to distributions beyond this family
 
 ---
 
@@ -265,11 +389,11 @@ Wrote linear model as
 
 $$y_i = \alpha + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_j x_{ij} + \varepsilon_i$$
 
-And assumed
+And assumed properties of residuals
 
 $$ \varepsilon_i \sim \text{Normal}(0, \sigma^2) $$
 
-This doesn't work out the same for GLMs &mdash; we don't have residuals in the linear predictor
+This doesn't work out the same for GLMs &mdash; we don't have a residual term $\varepsilon$ in the linear predictor
 
 Sampling variation comes from the response distribution
 
@@ -333,6 +457,20 @@ knitr::include_graphics("resources/fig-poisson-lm-descriptive-figure-1.png")
 ```{r dist-fig-3, fig.align = "center", out.width = "80%", echo = FALSE}
 knitr::include_graphics("resources/fig-other-dist-descr-1.png")
 ```
+
+---
+
+# Why?
+
+Is this really necessary? Is it just some mathematical sleight of hand?
+
+Yes, it is necessary (except for a couple of special cases Gaussian, Binomial)
+
+No, it is not just sleight of hand
+
+> Focus on the distribution of each observation of $y_i$
+
+What values can each observation take?
 
 ---
 class: inverse middle center subsection
@@ -477,162 +615,10 @@ $$z = \hat{\beta}_i / \mathrm{SE}(\hat{\beta}_i)$$
 
 ---
 
-# A Gamma GLM &mdash; simple age-depth modelling
-
-Radiocarbon age estimates from depths within a peat bog (Brew & Maddy, 1995, QRA Technical Guide 5)
-
-Estimate accumulation rate; assumption here is linear accumulation
-
-Uncertainty or error is greater at depth; mean variance relationship
-
-Fit mid-depth & mid-calibrated age points
-
----
-
-# A Gamma GLM &mdash; simple age-depth modelling
-
-```{r load-maddy, echo = TRUE}
-maddy <- read_csv(here("data", "maddy-peat.csv"), col_types = "cdddddd")
-maddy <- mutate(maddy, midDepth = upperDepth - (0.5 * abs(upperDepth - lowerDepth)),
-                calMid = calUpper - (0.5 * abs(calUpper - calLower)))
-maddy
-```
-
----
-
-# A Gamma GLM &mdash; simple age-depth modelling
-
-.row[
-
-.col-6[
-```{r plot-maddy, echo = TRUE, eval = FALSE}
-ggplot(maddy, aes(x = midDepth, y = calMid)) +
-    geom_point() +
-    labs(y = "Calibrated Age", x = "Depth")
-```
-
-]
-
-.col-6[
-```{r plot-maddy, echo = FALSE, eval = TRUE, fig.height = 6, fig.width = 6}
-```
-]
-]
-
----
-
-# A Gamma GLM
-
-.smaller[
-```{r peat-model, echo = TRUE}
-m_gamma <- glm(calMid ~ midDepth, data = maddy, family = Gamma(link = "identity"))
-summary(m_gamma)
-```
-]
-
----
-
-# A Gamma GLM
-
-.row[
-
-.col-6[
-.smaller[
-```{r plot-maddy-fitted-gamma, eval=FALSE}
-# data to predict at
-pdat <- with(maddy,
-             tibble(midDepth = seq(min(midDepth),
-                                   max(midDepth),
-                                   length = 100)))
-# predict
-p_gamma <- predict(m_gamma, pdat, type = "link",
-                   se.fit = TRUE)
-ilink <- family(m_gamma)$linkinv
-# confidence interval
-p_gamma <- pdat %>%
-  bind_cols(data.frame(p_gamma)) %>%
-  mutate(fitted = ilink(fit),
-         upper = ilink(fit + (2 * se.fit)),
-         lower = ilink(fit - (2 * se.fit)))
-# plot
-p1 <- ggplot(maddy, aes(x = midDepth, y = calMid)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper,
-                    x = midDepth), data = p_gamma,
-                inherit.aes = FALSE, alpha = 0.2) +
-    geom_line(data = p_gamma, aes(y = fitted)) +
-    geom_point() +
-    labs(y = "Calibrated Age", x = "Depth",
-         title = "Gamma GLM")
-p1
-```
-]
-]
-
-.col-6[
-```{r plot-maddy-fitted-gamma, echo = FALSE, eval = TRUE, fig.height = 6, fig.width = 6}
-```
-
-]
-]
-
----
-
-# A Gaussian GLM
-
-.row[
-
-.col-6[
-.smaller[
-```{r plot-maddy-fitted-gaussian, eval = FALSE}
-# fit gaussian GLM
-m_gaus <- glm(calMid ~ midDepth, data = maddy,
-              family = gaussian)
-# predict
-p_gaus <- predict(m_gaus, pdat, type = "link",
-                  se.fit = TRUE)
-ilink <- family(m_gaus)$linkinv
-# prep confidence interval
-p_gaus <- pdat %>%
-  bind_cols(data.frame(p_gaus)) %>%
-  mutate(fitted = ilink(fit),
-         upper = ilink(fit + (2 * se.fit)),
-         lower = ilink(fit - (2 * se.fit)))
-# plot
-p2 <- ggplot(maddy, aes(x = midDepth, y = calMid)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper,
-                    x = midDepth), data = p_gaus,
-                inherit.aes = FALSE, alpha = 0.2) +
-    geom_line(data = p_gaus, aes(y = fitted)) +
-    geom_point() +
-    labs(y = "Calibrated Age",
-         x = "Depth",
-         title = "Linear Model")
-p2
-```
-
-]
-]
-
-.col-6[
-```{r plot-maddy-fitted-gaussian, echo = FALSE, eval = TRUE, fig.height = 6, fig.width = 6}
-```
-
-]
-]
-
----
-
-```{r}
-library("patchwork")
-p1 + p2
-```
-
----
-
 # Transform or GLM?
 
 ```
-m1 <- glm(log(y) ~ x, data = my_data, family = Gamma(link = "identity"))
+m1 <- glm(log(y) ~ x, data = my_data, family = gaussian())
 
 m2 <- glm(y ~ x, data = my_data, family = Gamma(link = "log"))
 ```
@@ -988,7 +974,6 @@ gnu_glm2a <- glm(gnus ~ (death + sex + marrow)^2,
 all.equal(coef(gnu_glm2), coef(gnu_glm2a))
 ```
 
-
 ---
 class: inverse middle center subsection
 
@@ -1107,6 +1092,15 @@ gglm(moth_glm1)    # Poisson
 
 ```{r}
 gglm(moth_glm3)    # Negative binomial
+```
+
+---
+
+# *performance* 📦 
+
+```{r load-performance, cache = FALSE, fig.width = 1.777777 * 12, fig.height = 12, out.width = "85%", fig.align = "center"}
+library("performance")
+check_model(moth_glm1)
 ```
 
 ---
@@ -1364,7 +1358,7 @@ A *marginal effect* is a partial derivative from a regression equation
 
 * the change in $y$ for a unit change in one of the model terms
 
-This also applies to categorical terms as formally (with treatment coding) we're changing 1 unit (0 to 1) when we flick the switch
+This also applies to categorical terms as formally (with treatment coding) we're changing 1 unit (0 to 1) when we flick the switch (off to on)
 
 Others use the *conditional effect* or *group constrast* for the effects concerning categorical variables
 
@@ -1431,7 +1425,7 @@ Create the data we need; two copies of the observed data, with `death` set to
 
 .small[
 ```{r}
-(df_predation <- datagridcf(model = gnu_glm1, death = "Predation"))
+(df_predation <- datagrid(model = gnu_glm1, death = "Predation"))
 ```
 ]
 
@@ -1441,7 +1435,7 @@ Create the data we need; two copies of the observed data, with `death` set to
 
 .small[
 ```{r}
-(df_other <- datagridcf(model = gnu_glm1, death = "Other"))
+(df_other <- datagrid(model = gnu_glm1, death = "Other"))
 ```
 ]
 
@@ -1651,7 +1645,7 @@ With so many comparisons, we should adjust the $p$ values
 .small[
 ```{r}
 gnu_glm1 |> avg_comparisons(variables = list(marrow = "pairwise"),
-    by = c("sex", "death"), p_adjust = "fdr")
+    by = c("sex", "death"), multcomp = "fdr")
 ```
 ]
 
@@ -2193,7 +2187,7 @@ ggplot(aes(Time, estimate, level = Chick)) +
 ]
 
 .col-6[
-```{r predictions-chick-lmm3, echo = FALSE}
+```{r predictions-chick-lmm3, echo = FALSE, cache = FALSE}
 ```
 ]
 ]
@@ -2273,7 +2267,10 @@ chick_lmm3 |> avg_slopes(variable = "Time", by = "Diet", re.form = NA)
 Pairwise comparisons of slopes
 
 ```{r}
-chick_lmm3 |> avg_comparisons(variables = "Time", by = "Diet", hypothesis = "pairwise", re.form = NA)
+chick_lmm3 |> avg_comparisons(
+    variables = "Time", by = "Diet",
+    hypothesis = difference ~ pairwise, re.form = NA
+)
 ```
 
 ---
@@ -2283,14 +2280,17 @@ chick_lmm3 |> avg_comparisons(variables = "Time", by = "Diet", hypothesis = "pai
 Comparison of slopes with reference level
 
 ```{r}
-chick_lmm3 |> avg_comparisons(variables = "Time", by = "Diet", hypothesis = "reference", re.form = NA)
+chick_lmm3 |> avg_comparisons(
+    variables = "Time", by = "Diet",
+    hypothesis = difference ~ reference, re.form = NA
+)
 ```
 
 ---
 
 # Maximal model
 
-For strict compatibility with a repeated measures ANOVA we need what is know as the *maximal random effects model*
+For strict compatibility with a repeated measures ANOVA we need what is known as the *maximal random effects model*
 
 We have the same formula in the random effects as the fixed effects
 
@@ -2301,11 +2301,13 @@ chick_lmm4 <- lmer(weight ~ 1 + Time + Time:Diet + (1 + Time + Time:Diet | Chick
 
 You can then peel off a layer from the random effects using AIC or LRT if you encounter warnings while fitting (as we do here)
 
+Barr *et al* (2013) J. Mem. Lang. 68. <https://doi.org/10.1016/j.jml.2012.11.001>
+
 ---
 
 # Model diagnostics
 
-Misspecification of GL(M)Ms cannot be reliably diagnosed with standard residual plot
+Misspecification of GL(M)Ms **cannot** be reliably diagnosed with standard residual plot
 
 The expected distribution of the data (predictive distribution) changes with the fitted values
 
@@ -2376,6 +2378,8 @@ Can fit using `glmer()` but limited by range of families allowed
 
 `glmmTMB::glmmTMB()` is a new (developing) alternative with wider array of features inc. families
 
+As GAMs can be seen as GLMMs, you can fit GLMMs using *mgcv*
+
 Beyond this you likely need Bayesian support and I would suggest `brms::brm()`
 
 ---
@@ -2385,8 +2389,11 @@ Beyond this you likely need Bayesian support and I would suggest `brms::brm()`
 Are things improved by fitting a GLMM (chick weight can't be negative)?
 
 ```{r}
-chick_glmm1 <- glmer(weight ~ 1 + Time + Time:Diet + (1 + Time | Chick),
-    data = ChickWeight, family = Gamma(link = "log"))
+chick_glmm1 <- glmer(
+    weight ~ 1 + Time + Time:Diet + (1 + Time | Chick),
+    data = ChickWeight,
+    family = Gamma(link = "log")
+)
 sim_glmm1 <- simulateResiduals(chick_glmm1, plot = FALSE)
 ```
 
@@ -2440,12 +2447,13 @@ Decapeptyl inhibits the preoduction of testosterone
 Experiment started (day 1) when rats were 45 days old and from day 50 the size of each rat's head was measured via an x-ray image
 
 ```{r setup-rat-hormone-example, echo = FALSE}
-rats_url <- "https://bit.ly/rat-hormone"
-rats <- read_table(rats_url, col_types = "dddddddddddd-")
+#rats_url <- "https://bit.ly/rat-hormone"
+#rats <- read_table(rats_url, col_types = "dddddddddddd-")
+rats <- read_table("data/rats.txt", col_types = "dddddddddddd-")
 # ignore the warning - it"s due to trailing white space at the ends of each
 #   row in the file
 
-rats <- rats %>%
+rats <- rats |>
     mutate(treatment = fct_recode(factor(group, levels = c(1, 2, 3)),
                                   Low = "1",
                                   High = "2",
@@ -2544,9 +2552,11 @@ clover <- readr::read_csv("../data/clover.csv")
 
 ```{r}
 clover <- clover |>
-    mutate(fspecies = factor(species),
+    mutate(
+        fspecies = factor(species),
         freplication = factor(replication),
-        ftime = factor(time))
+        ftime = factor(time)
+    )
 library("lme4")
 ```
 
@@ -2630,7 +2640,7 @@ clover_tmb1 <- glmmTMB(cbind(nhard, nsoft) ~ time + (time | fspecies) +
 
 # GA(M)M
 
-```{r}
+```{r plot-gamm-dharma, fig.align="center", out.width="75%"}
 library("mgcv")
 chick_gam1 <- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
     data = ChickWeight, method = "fREML")
@@ -2642,7 +2652,7 @@ plot(sim_gam1)
 
 # GA(M)M
 
-```{r chick-gam-model-1}
+```{r chick-gam-model-1, fig.align="center", out.width="75%"}
 chick_gam2 <- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
     data = ChickWeight, method = "fREML", family = Gamma(link = "log"))
 sim_gam2 <- simulateResiduals(chick_gam2, plot = FALSE)
@@ -2653,7 +2663,7 @@ plot(sim_gam2)
 
 # GA(M)M
 
-```{r chick-gam-model-2}
+```{r chick-gam-model-2, fig.align="center", out.width="75%"}
 chick_gam3 <- bam(weight ~ Diet + s(Time, by = Diet, k = 5) + s(Time, Chick, bs = "fs", k = 5),
     data = ChickWeight, method = "fREML", family = tw(link = "log"))
 sim_gam3 <- simulateResiduals(chick_gam3, plot = FALSE)
@@ -2664,7 +2674,7 @@ plot(sim_gam3)
 
 # GA(M)m
 
-```{r}
+```{r chick-gam-model-3, fig.align="center", out.width="75%"}
 chick_gam3 |> plot_predictions(condition = c("Time", "Diet"),
     exclude = "s(Time,Chick)")
 ```
@@ -2673,7 +2683,7 @@ chick_gam3 |> plot_predictions(condition = c("Time", "Diet"),
 
 # Model diagnostics plots for MM
 
-```{r}
+```{r model-diagnostics-glmm, fig.width = 1.777777 * 12, fig.height = 12, out.width = "85%", fig.align = "center"}
 library("performance")
 check_model(chick_glmm1)
 ```
@@ -2682,6 +2692,6 @@ check_model(chick_glmm1)
 
 # Re-use
 
-Copyright © (2015&ndash;2025) Gavin L. Simpson Some Rights Reserved
+Copyright © (2015&ndash;2026) Gavin L. Simpson Some Rights Reserved
 
 Unless indicated otherwise, this slide deck is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).

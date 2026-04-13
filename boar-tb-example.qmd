@@ -1,0 +1,168 @@
+---
+title: "Distribution of tuberculosis-like lesions in wild boar"
+format:
+  html:
+    toc: true
+    html-math-method: katex
+    embed-resources: true
+    monobackgroundcolor: "white"
+knitr:
+  opts_chunk: 
+    echo: true
+    fig.align: center
+highlight-style: github-dark
+---
+
+In this activity, you will practice fitting a generalized linear model. The data are from Vicente *et al* (2006), who analysed the distribution of tuberculosis-like lesions in wild boar, *Sus scrofa*. Part of this study was looking at the potential importance of wild board in maintaining tuberculosis in south central Spain.
+
+Before we being, let's load some packages
+
+```{r}
+#| message: false
+#| label: setup
+library("janitor")
+library("dplyr")
+library("tibble")
+library("tidyr")
+library("readr")
+library("ggplot2")
+library("gglm")
+library("performance")
+library("marginaleffects")
+```
+
+Now we can load the data
+
+```{r}
+wb <- read_table("data/boar.txt", col_types = "dddd") |>
+  janitor::clean_names()
+```
+
+There are four variables in the data set:
+
+* `tb` and indicator of the presence (`1`) or absence (`0`) of tuberculoisis-like lesions,
+* `sex` coded as `1` or `2`,
+* `age_class`, and
+* `length_ct`, which is the length of the animal's head and body.
+
+We should recode some of these variables if we intended to use `sex` and `age_class` in models as these are categorical variables and are best coded as factors in R. For plotting it can also be useful to do this:
+
+```{r}
+wb <- wb |>
+  mutate(
+    f_tb = factor(tb, levels = c(0,1))
+  )
+```
+
+Start by producing boxplots of `length_ct` against `tb` presence and absence
+
+```{r}
+wb |>
+  ggplot(
+    aes(
+      y = length_ct, x = f_tb, fill = f_tb
+    )
+  ) +
+  geom_boxplot() +
+  labs(
+    x = "TB status",
+    fill = "TB Status",
+    y = "Length CT"
+  )
+```
+
+There is a tendency, in the data for animals with tubercolosis-like lesions to be larger. Of course, in any real data analysis, we should investigate why there are missing values in the `tb` variable and account for potential missing data problems.
+
+::: {.callout-note}
+# Question
+
+However, for now, let's proceed by fitting a simple binomial GLM to these data. The model we want to fit is
+
+\begin{align*}
+\mathtt{tb}_i \sim& \mathcal{B}(\mu_i, 1) \\
+\mathbb{E}(\mathtt{tb}_i) =& \mu_i \\
+\text{logit}(\mu_i) =& \beta_0 + \beta_1 \mathtt{length\_ct}
+\end{align*}
+
+The response variable is `tb` (or `f_tb` can be used), and the predictor variable is `length_ct`. Fit this model in R.
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r fit-tb-glm}
+wb_glm <- glm(
+  tb ~ length_ct,
+  data = wb,
+  family = binomial(link = "logit")
+)
+```
+
+:::
+
+::: {.callout-note}
+# Question
+
+Produce the model summary. Is the effect of `length_ct` on the prevalence of tuberculosis-like lesions statistically interesting?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r fsummary-tb-glm}
+summary(wb_glm)
+```
+
+Yes, the effect is statistically interesting; the *p* values is small.
+
+:::
+
+Having fitted a model, it is often useful to plot estimates from the model at representative values of the covariates. The *marginaleffects* package makes this easy and forces us to condition on specific values of the variables in more complex situations.
+
+Here, we just prepare a plot of the fitted model `wb_glm` using `plot_predictions()`:
+
+```{r}
+wb_glm |> plot_predictions(condition = "length_ct")
+```
+
+We can add the original data to this plot, as a point layer
+
+```{r}
+wb_glm |> plot_predictions(condition = "length_ct") +
+  geom_point(
+    data = wb,
+    aes(x = length_ct, y = tb),
+    position = position_jitter(height = 0.025),
+    alpha = 0.5
+  )
+```
+
+::: {.callout-note}
+# Question
+
+Look at the model diagnostics. Are there any potential problems with the model?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r gglm-diagnostics-tb-glm}
+gglm(wb_glm)
+```
+
+Err...
+
+That was a trick question; model diagnostics are notoriously difficult for binary responses. Better diagnostics can be achieved using the *performance* package and it's `check_model()` function:
+
+```{r}
+#| label: check-model-diagostics
+#| fig-width: 10
+#| fig-heigh: 10
+check_model(wb_glm)
+```
+
+Read `?check_model` to understand what the different diagnostics produced here show and how to interpret them. Note that these plots are using simulated quantile residuals from DHARMa, which are essential for binary data.
+
+:::
