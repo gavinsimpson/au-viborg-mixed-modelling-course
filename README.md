@@ -1,23 +1,19 @@
-# Applied mixed modelling with R
+# Applied regression modelling with R
 
 ### Aarhus University PhD Course
 
-* Winter 2025 running: January 7<sup>th</sup> &ndash; 9<sup>th</sup>
+* Spring 2026 running: April 14<sup>th</sup> &ndash; 16<sup>th</sup>
 
 * ECTS credits: 1.5 ECTS
 
 * Language: English
 
-* Fee: 350 DKK
+* Fee: 400 DKK
 
 
 ## Name of course leader
 
 Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences, Aarhus University <gavin@anivet.au.dk>
-
-### Registration
-
-You can register for this course here: <https://events.au.dk/phdcourseappliedmixedmodellingwithr>
 
 ### Slides
 
@@ -37,7 +33,7 @@ You can register for this course here: <https://events.au.dk/phdcourseappliedmix
 
 ## Objectives of the course
 
-The course will provide an applied introduction to generalized linear mixed modelling in R for biologists. The course will equip participants to fit appropriate models to data using R and the *lme4* and *glmmTMB* packages, how to test the assumptions of the fitted model and assess the adequacy of fit, and how to use the model to estimate quantities of interest or test hypotheses of interest using the *marginaleffects* package.
+The course will provide an applied introduction to generalized linear (mixed) modelling in R for biologists. The course will equip participants to fit appropriate models to data using R and the *lme4* and *glmmTMB* packages, how to test the assumptions of the fitted model and assess the adequacy of fit, and how to use the model to estimate quantities of interest or test hypotheses of interest using the *marginaleffects* package.
 
 ## Learning outcomes and competences
 
@@ -73,7 +69,7 @@ This course is suitable for Phd students (including senior thesis-based masters 
 
 ## Computing requirements
 
-Participants need to bring their own laptop with the latest version of R installed (version 4.4.0 or later), as well as the current version of RStudio. If you use another editor for your R code feel free to use it instead of Rstudio, but we cannot help you if you encounter problems with it.
+Participants need to bring their own laptop with the latest version of R installed (version 4.5.0 or later), as well as the current version of RStudio. If you use another editor for your R code feel free to use it instead of Rstudio, but we cannot help you if you encounter problems with it.
 
 You can download R from [cloud.r-project.org](https://cloud.r-project.org/) and select from the three links at the top of the page as required for your operating system.
 
@@ -89,28 +85,28 @@ and look at the entry next to `version.string`:
 
 ```
 r$> version                                                                     
-               _
-platform       aarch64-apple-darwin20
-arch           aarch64
-os             darwin20
-system         aarch64, darwin20
-status
-major          4
-minor          4.2
-year           2024
-month          10
-day            31
-svn rev        87279
-language       R
-version.string R version 4.4.2 (2024-10-31)
-nickname       Pile of Leaves
+               _                           
+platform       aarch64-apple-darwin20      
+arch           aarch64                     
+os             darwin20                    
+system         aarch64, darwin20           
+status                                     
+major          4                           
+minor          5.2                         
+year           2025                        
+month          10                          
+day            31                          
+svn rev        88974                       
+language       R                           
+version.string R version 4.5.2 (2025-10-31)
+nickname       [Not] Part in a Rumble
 ```
 
-This should include `4.4.x` if you are running the latest release. If the installed version of R is < 4.4.0, install a newer version of R by downloading and running one of the installers from [cloud.r-project.org](https://cloud.r-project.org/) as mentioned above.
+This should include `4.5.x` if you are running the latest release. If the installed version of R is < 4.5.0, install a newer version of R by downloading and running one of the installers from [cloud.r-project.org](https://cloud.r-project.org/) as mentioned above.
 
 To check that RStudio is up-to-date, open RStudio, open the Help menu, and choose *Check for Updates*. RStudio will then check to see if there is a newer version available and if there is it will give you the option to download the newer version.
 
-Prior to arriving at AU Viborg on the 7th of January, make sure you have updated your installed R packages and that you have installed the packages listed below. To do this, open RStudio (or R) and in the console window (usually lower left, with a prompt that looks like `>`) run
+Prior to arriving at AU Viborg on the 14th of January, make sure you have updated your installed R packages and that you have installed the packages listed below. To do this, open RStudio (or R) and in the console window (usually lower left, with a prompt that looks like `>`) run
 
 ```r
 parallel::detectCores(logical = FALSE)
@@ -127,5 +123,12 @@ Change the value of `Ncpus` to the number cores you have on your computer as thi
 Now we can install the required packages
 
 ```r
-install.packages(c("tidyverse", "lme4", "marginaleffects", "DHARMa", "glmmTMB"))
+pkgs <- c(
+  "rmarkdown", "xaringan", "dplyr", "forcats", "ggokabeito", "ggplot2", "here",
+  "knitr", "mgcv", "patchwork", "purrr", "readr", "tibble", "tidyr", "ggforce",
+  "glmmTMB", "marginaleffects", "gglm", "gratia", "performance", "DHARMa",
+  "mgcViz", "palmerpenguins", "broom", "lme4"
+)
+
+install.packages(pkgs)
 ```
