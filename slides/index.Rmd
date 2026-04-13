@@ -1608,6 +1608,7 @@ What are we comparing here?
 --
 
 We are averaging the comparisons of the levels of `marrow` over the other variables in the model (`sex`, `death`)
+
 ---
 
 # Comparisons

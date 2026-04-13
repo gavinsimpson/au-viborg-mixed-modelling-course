@@ -17,7 +17,7 @@ Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences
 
 ### Slides
 
-* [Slidedeck](https://bit.ly/420miIv)
+* [Slidedeck](https://gavinsimpson.github.io/au-viborg-mixed-modelling-course/slides/)
 
 <!-- ### Computing
 

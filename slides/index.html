@@ -625,207 +625,10 @@ Tests the null hypothesis that `\(\beta_i = 0\)`
 
 ---
 
-# A Gamma GLM &amp;mdash; simple age-depth modelling
-
-Radiocarbon age estimates from depths within a peat bog (Brew &amp; Maddy, 1995, QRA Technical Guide 5)
-
-Estimate accumulation rate; assumption here is linear accumulation
-
-Uncertainty or error is greater at depth; mean variance relationship
-
-Fit mid-depth &amp; mid-calibrated age points
-
----
-
-# A Gamma GLM &amp;mdash; simple age-depth modelling
-
-
-``` r
-maddy &lt;- read_csv(here("data", "maddy-peat.csv"), col_types = "cdddddd")
-maddy &lt;- mutate(maddy, midDepth = upperDepth - (0.5 * abs(upperDepth - lowerDepth)),
-                calMid = calUpper - (0.5 * abs(calUpper - calLower)))
-maddy
-```
-
-```
-## # A tibble: 12 × 9
-##    Sample upperDepth lowerDepth ageBP ageError calUpper calLower midDepth calMid
-##    &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
-##  1 SRR-4…         20       22     355       35      509      307     19     408 
-##  2 SRR-4…         26       28     465       35      542      480     25     511 
-##  3 SRR-4…         32       34     635       35      671      545     31     608 
-##  4 SRR-4…         38       40     740       35      732      666     37     699 
-##  5 SRR-4…         44       46     865       35      916      691     43     804.
-##  6 SRR-4…         50       52.5   870       35      918      692     48.8   805 
-##  7 SRR-4…         56       58     985       35      967      795     55     881 
-##  8 SRR-4…        100      108    1270       35     1284     1097     96    1190.
-##  9 SRR-4…        200      207    2575       35     2761     2558    196.   2660.
-## 10 SRR-4…        260      268    3370       35     3697     3487    256    3592 
-## 11 SRR-4…        400      407    4675       35     5563     5306    396.   5434.
-## 12 SRR-4…        493      500    5315       35     6263     5955    490.   6109
-```
-
----
-
-# A Gamma GLM &amp;mdash; simple age-depth modelling
-
-.row[
-
-.col-6[
-
-``` r
-ggplot(maddy, aes(x = midDepth, y = calMid)) +
-    geom_point() +
-    labs(y = "Calibrated Age", x = "Depth")
-```
-
-]
-
-.col-6[
-&lt;img src="index_files/figure-html/plot-maddy-1.svg" alt="" style="display: block; margin: auto;" /&gt;
-]
-]
-
----
-
-# A Gamma GLM
-
-.smaller[
-
-``` r
-m_gamma &lt;- glm(calMid ~ midDepth, data = maddy, family = Gamma(link = "identity"))
-summary(m_gamma)
-```
-
-```
-## 
-## Call:
-## glm(formula = calMid ~ midDepth, family = Gamma(link = "identity"), 
-##     data = maddy)
-## 
-## Coefficients:
-##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) 197.2909    22.5603   8.745 5.35e-06 ***
-## midDepth     12.5799     0.4543  27.693 8.74e-11 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for Gamma family taken to be 0.004612561)
-## 
-##     Null deviance: 10.439047  on 11  degrees of freedom
-## Residual deviance:  0.048316  on 10  degrees of freedom
-## AIC: 145.57
-## 
-## Number of Fisher Scoring iterations: 4
-```
-]
-
----
-
-# A Gamma GLM
-
-.row[
-
-.col-6[
-.smaller[
-
-``` r
-# data to predict at
-pdat &lt;- with(maddy,
-             tibble(midDepth = seq(min(midDepth),
-                                   max(midDepth),
-                                   length = 100)))
-# predict
-p_gamma &lt;- predict(m_gamma, pdat, type = "link",
-                   se.fit = TRUE)
-ilink &lt;- family(m_gamma)$linkinv
-# confidence interval
-p_gamma &lt;- pdat %&gt;%
-  bind_cols(data.frame(p_gamma)) %&gt;%
-  mutate(fitted = ilink(fit),
-         upper = ilink(fit + (2 * se.fit)),
-         lower = ilink(fit - (2 * se.fit)))
-# plot
-p1 &lt;- ggplot(maddy, aes(x = midDepth, y = calMid)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper,
-                    x = midDepth), data = p_gamma,
-                inherit.aes = FALSE, alpha = 0.2) +
-    geom_line(data = p_gamma, aes(y = fitted)) +
-    geom_point() +
-    labs(y = "Calibrated Age", x = "Depth",
-         title = "Gamma GLM")
-p1
-```
-]
-]
-
-.col-6[
-&lt;img src="index_files/figure-html/plot-maddy-fitted-gamma-1.svg" alt="" style="display: block; margin: auto;" /&gt;
-
-]
-]
-
----
-
-# A Gaussian GLM
-
-.row[
-
-.col-6[
-.smaller[
-
-``` r
-# fit gaussian GLM
-m_gaus &lt;- glm(calMid ~ midDepth, data = maddy,
-              family = gaussian)
-# predict
-p_gaus &lt;- predict(m_gaus, pdat, type = "link",
-                  se.fit = TRUE)
-ilink &lt;- family(m_gaus)$linkinv
-# prep confidence interval
-p_gaus &lt;- pdat %&gt;%
-  bind_cols(data.frame(p_gaus)) %&gt;%
-  mutate(fitted = ilink(fit),
-         upper = ilink(fit + (2 * se.fit)),
-         lower = ilink(fit - (2 * se.fit)))
-# plot
-p2 &lt;- ggplot(maddy, aes(x = midDepth, y = calMid)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper,
-                    x = midDepth), data = p_gaus,
-                inherit.aes = FALSE, alpha = 0.2) +
-    geom_line(data = p_gaus, aes(y = fitted)) +
-    geom_point() +
-    labs(y = "Calibrated Age",
-         x = "Depth",
-         title = "Linear Model")
-p2
-```
-
-]
-]
-
-.col-6[
-&lt;img src="index_files/figure-html/plot-maddy-fitted-gaussian-1.svg" alt="" style="display: block; margin: auto;" /&gt;
-
-]
-]
-
----
-
-
-``` r
-library("patchwork")
-p1 + p2
-```
-
-&lt;img src="index_files/figure-html/unnamed-chunk-4-1.svg" alt="" style="display: block; margin: auto;" /&gt;
-
----
-
 # Transform or GLM?
 
 ```
-m1 &lt;- glm(log(y) ~ x, data = my_data, family = Gamma(link = "identity"))
+m1 &lt;- glm(log(y) ~ x, data = my_data, family = gaussian())
 
 m2 &lt;- glm(y ~ x, data = my_data, family = Gamma(link = "log"))
 ```
@@ -1199,7 +1002,7 @@ moth_glm4 |&gt;
         vcov = TRUE, type = "response")
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-9-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-8-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 class: inverse middle center subsection
@@ -1442,7 +1245,6 @@ all.equal(coef(gnu_glm2), coef(gnu_glm2a))
 ## [1] TRUE
 ```
 
-
 ---
 class: inverse middle center subsection
 
@@ -1458,7 +1260,7 @@ layout(matrix(1:4, ncol = 2, byrow = TRUE))
 moth_glm1 |&gt; plot()
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-19-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-18-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ``` r
 layout(1)
@@ -1474,7 +1276,7 @@ library("gglm")
 moth_glm1 |&gt; gglm()
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-20-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-19-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1501,7 +1303,7 @@ Residuals vs. linear predictor plot
 ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-21-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-20-1.svg" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1514,7 +1316,7 @@ ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 ggplot(data = moth_glm1) + stat_normal_qq() # plot(moth_glm1, which = 2)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-22-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-21-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1528,7 +1330,7 @@ library("gratia")
 qq_plot(moth_glm1, method = "simulate")
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-23-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-22-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1556,7 +1358,7 @@ Scale location plot
 ggplot(data = moth_glm1) + stat_scale_location() # plot(moth_glm1, which = 3)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-24-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-23-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1569,7 +1371,7 @@ Cooks distance vs. leverage &amp;mdash; influence of outliers
 ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-25-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-24-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1580,7 +1382,7 @@ ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 gglm(moth_glm1)    # Poisson
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-26-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-25-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1591,7 +1393,19 @@ gglm(moth_glm1)    # Poisson
 gglm(moth_glm3)    # Negative binomial
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-27-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-26-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# *performance* 📦 
+
+
+``` r
+library("performance")
+check_model(moth_glm1)
+```
+
+&lt;img src="index_files/figure-html/load-performance-1.svg" alt="" width="85%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1827,7 +1641,7 @@ There are three possible values: `Adelie`, `Chinstrap`, `Gentoo`
 gglm(model_slider)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-33-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-32-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1836,7 +1650,7 @@ gglm(model_slider)
 gglm(model_switch)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-34-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-33-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1857,7 +1671,7 @@ glm_switch &lt;- glm(body_mass_g ~ species, data = penguins, family = Gamma("log
 gglm(glm_slider)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-35-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-34-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1868,7 +1682,7 @@ gglm(glm_slider)
 gglm(glm_switch)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-36-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-35-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -2435,6 +2249,7 @@ What are we comparing here?
 --
 
 We are averaging the comparisons of the levels of `marrow` over the other variables in the model (`sex`, `death`)
+
 ---
 
 # Comparisons
@@ -3399,7 +3214,7 @@ sim_lmm3 &lt;- simulateResiduals(chick_lmm3, plot = FALSE)
 plot(sim_lmm3)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-67-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-66-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -3442,7 +3257,7 @@ sim_glmm1 &lt;- simulateResiduals(chick_glmm1, plot = FALSE)
 plot(sim_glmm1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-69-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-68-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 --
 
@@ -3468,7 +3283,7 @@ sim_lmm5 &lt;- simulateResiduals(chick_lmm5, plot = FALSE)
 plot(sim_lmm5)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-71-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-70-1.svg" alt="" style="display: block; margin: auto;" /&gt;
 
 
 ---
