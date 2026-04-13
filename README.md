@@ -124,10 +124,10 @@ Now we can install the required packages
 
 ```r
 pkgs <- c(
-  "rmarkdown", "xaringan", "dplyr", "forcats", "ggokabeito", "ggplot2", "here",
-  "knitr", "mgcv", "patchwork", "purrr", "readr", "tibble", "tidyr", "ggforce",
-  "glmmTMB", "marginaleffects", "gglm", "gratia", "performance", "DHARMa",
-  "mgcViz", "palmerpenguins", "broom", "lme4"
+  "dplyr", "forcats", "ggokabeito", "ggplot2", "here", "knitr", "mgcv",
+  "patchwork", "purrr", "readr", "tibble", "tidyr", "ggforce", "glmmTMB",
+  "marginaleffects", "gglm", "gratia", "performance", "DHARMa", "mgcViz",
+  "palmerpenguins", "broom", "lme4"
 )
 
 install.packages(pkgs)
