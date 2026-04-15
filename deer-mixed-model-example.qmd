@@ -1,0 +1,286 @@
+---
+title: "Distribution and faecal shedding patterns of the first-stage larvae of *Elaphostrongylus cervi* in red deer in Spain"
+format:
+  html:
+    toc: true
+    html-math-method: katex
+    embed-resources: true
+    monobackgroundcolor: "white"
+knitr:
+  opts_chunk: 
+    echo: true
+    fig.align: center
+highlight-style: github-dark
+---
+
+In this activity, you will practice fitting a generalized linear mixed model where the response variable of interest is the presence or absence of the first-stage larvae (L1) of *E. cervi* on a number of farms across Spain. The data are again from Vicente *et al* (2006).
+
+Before we being, let's load some packages
+
+```{r}
+#| message: false
+#| label: setup
+library("janitor")
+library("broom")
+library("dplyr")
+library("readr")
+library("glmmTMB")
+library("ggplot2")
+library("performance")
+library("marginaleffects")
+```
+
+Ignore the warning about TMB if you get it; it doesn't seem that harmful.
+
+Now we can load the data
+
+```{r}
+deer_l1 <- read_table("data/deer-ecervi.txt", col_types = "cddd") |>
+  janitor::clean_names()
+```
+
+There are four variables in the data set
+
+* `farm` a character variable that is the ID for each farm,
+* `sex`, female = 1, male = 2,
+* `length`, the length of the deer,
+* `ecervi`, a measure of the intensity of infestation.
+
+I think the numbers in `ecervi` are the number of larvae per gramme of faecal matter, but Zuur *et al* don't state what these data are and the reference they give seems only somewhat related to the data --- there are more farms in this data set than reported in a 2006 paper by Vicente *et al*. Also, Zuur *et al* just model the presence / absence of first-stage larvae, so we'll follow their example for now, but at the end I'll show how we might model the intensity data directly.
+
+To begin then, we need to do a little data wrangling to create variables we want and get the `sex` variable in a better shape.
+
+```{r}
+deer_l1 <- deer_l1 |>
+  mutate(
+    ecervi_01 = as.numeric(ecervi > 0),
+    sex = factor(sex, labels = c("female", "male"), levels = 1:2),
+    farm  = factor(farm),
+    length_c = length - mean(length)
+  )
+```
+
+Note that in the last line with the `mutate()` step we are centring the `length` variable. If we included `length` in the model as is, the intercept would have the interpretation as the probability that a length 0 deer has a parasite. Length 0 deer do not exist, so while there is nothing wrong mathematically with doing this, we can make the intercept more biologically meaningful by centring the values of `length` around the mean length. In this centred length variable is included in the model instead, the intercept would now be interpreted as the probability of having a parasite in a deer of average length.
+
+If we look at the data, we see that there are repeated observations on most of the farms
+
+```{r}
+deer_l1 |> count(farm)
+```
+
+It is important to include the between-farm differences in any model we fit to these data.
+
+Our aim will be to model the presence or absence of first-stage larvae using `sex` and `length_c` plus their interaction as covariates, and `farm` to account for between-farm differences.
+
+::: {.callout-note}
+# Question
+
+The response data of interest in this example is the presence or absence of first-stage larvae in each faecal sample. What response or error distribution (`family`) is appropriate for modelling this response variable? Why?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+The binomial (Bernoulli) distribution is appropriate. The response variable `ecervi_01` can only take on one of two possible values, `0` or `1`.
+
+:::
+
+## GLM
+
+::: {.callout-note}
+# Question
+
+The first model we will fit will be a simple GLM. Using the `family you decided upon above, fit a model with `ecervi_01` as the response variable and the following terms
+
+1. `sex`,
+2. `length_c`,
+3. the interaction between `sex` and `length_c`, and
+4. `farm` (as a fixed effect in this case as this is a GLM)
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+We fit this model with `glm()` as follows:
+
+```{r}
+l1_glm1 <- glm(
+  ecervi_01 ~ sex + length_c + sex:length_c + farm,
+  data = deer_l1,
+  family = binomial(link = "logit")
+)
+```
+
+:::
+
+If we look at the model summary for `l1_glm1`, we note two things
+
+1. the covariates in interest, `sex` and `length_c`, and their interaction, are all highly statistically interesting,
+2. the `farm` term has used up 23 degrees of freedom, which is a lot, and because this is a fixed effect term, the model fitted can only tell us about this sample of farms.
+
+We will use `plot_predictions()` to visualise the fitted values of this GLM
+
+```{r}
+#| fig-height: 4
+l1_glm1 |> plot_predictions(
+  condition = c("length_c", "farm", "sex"),
+  vcov = FALSE
+)
+```
+
+By conditioning on all three variables of interest, we can see in a single plot all possible effects encoded by the model. The large number of farms makes it difficult to see which farm is which using the colour scale, but we can gain a sense of the between-farm variations in estimated probability of infection of red deer. Note that by setting `vcov = FALSE`, standard errors are not computed, which speeds up the computations behind the plot, but in this case I used this to avoid plotting the confidence intervals as that resulted in a very cluttered and muddy mess.
+
+We can reverse the positions of `sex` and `farm`, to achieve a plot that highlights the individual farms; this kind of visualisation is known as a *small multiple*
+
+```{r}
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 8
+l1_glm1 |> plot_predictions(
+  condition = c("length_c", "sex", "farm")
+)
+```
+
+::: {.callout-note}
+# Question
+
+Using the `check_model()` function from the *performance* 📦, produce model diagnostics for the model you fitted. Are there any obvious problems?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+We fit this model with `glm()` as follows:
+
+```{r}
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 10
+l1_glm1 |> check_model()
+```
+
+The main issue is that there are some larger than expected residuals in the binned residuals plot. Otherwise the diagnostics look OK for this model.
+
+:::
+
+## GLMM
+
+The major problem with the GLM we just fitted is that it cannot be used to predict for other farms not observed in the data set used to fit the model. Using `farm` as a fixed effect ate up 23 degrees of freedom (24 farms, minus 1 as the intercept represents one of the farms). If we wanted to consider the possibility that the effect of deer size (`length_c`) might vary between farms, we would need a `farm:length_c` interaction, which would use up another 23 degrees of freedom.
+
+This is where random effects come in especially useful.
+
+In this section of the exercise, we'll turn the GLM we just fitted into a GLMM. We'll fit this model using `glmmTMB()` from the *glmmTMB* 📦.
+
+The model we are going to fit is
+
+\begin{align*}
+Y_{ij} & \sim \mathcal{B}(\mu_{ij}, n = 1) \\
+\text{logit}(\mu_i) &= \beta_0 + \beta_1 \mathtt{length\_c}_{ij} + \beta_2 \mathtt{sex}_{ij} + \beta_3 \mathtt{length\_c}_{ij} \times \mathtt{sex}_{ij} + \gamma_i \\
+\gamma_i & \sim \mathcal{N}(0, \sigma_{\gamma}^2)
+\end{align*}
+
+The main omission is lack of `farm` in the equation and the addition of the $\gamma_i$ term. Here, $j$ refers to each animal and $i$ refers to each farm. $\gamma_i$ then is the *random intercept* for `farm`, which will capture the variation between farms and which will induce a correlation among the observations within individual farms.
+
+In *glmmTMB* and *lme*, random effects are included in the model formula inside parentheses: `(1 | farm)` for example would indicate a random intercept (the `1` being R's notation for an intercept) *within* the levels of `farm`.
+
+To fit the GLMM to these data then, we will use the following R code
+
+```{r}
+l1_glmm1 <- glmmTMB(
+  ecervi_01 ~ sex + length_c + sex:length_c +    # fixed effects
+    (1 | farm),                                  # random effect
+  data = deer_l1,
+  family = binomial(link = "logit")
+)
+```
+
+::: {.callout-note}
+# Question
+
+Look at the model summary. What is the standard deviation of the random intercept term ($\sigma_{\gamma}$)?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r}
+l1_glmm1 |> summary()
+```
+
+The estimate for $\sigma_{\gamma}$ is 1.547.
+
+:::
+
+::: {.callout-note}
+# Question
+
+Look at the diagnostics for this model using `check_model()`. Do you notice any problems with this model?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r}
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 12
+l1_glmm1 |> check_model()
+```
+
+There don't appear to be any major problems with this model; in fact, the diagnostics look very similar to the ones obtained for the GLM, which is not unexpected as the two models are very similar.
+
+:::
+
+The is an additional diagnostic plot among the suite of plots produced; a normal QQ plot of the random effect values for each farm and their uncertainties. Recall that when we are fitting random effects, we do not estimate the values of the random effects but rather we estimate the variance of the *distribution* of the random effects from which the observed farms are random draws. Most commonly, the distribution assumed for the random effects is a Gaussian distribution.
+
+If we are being *old style* random effect people, then it would be important to us whether the values of the random intercepts are distributed approximately normally.
+
+::: {.callout-note}
+# Question
+
+Focus on the QQ plot of the random effect for `farm`. We can produce just this plot using
+
+```{r}
+#| eval: false
+l1_glmm1 |> check_model(check = "reqq")
+```
+
+Is there any evidence that the random intercepts deviate markedly from a Gaussian distribution?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r}
+l1_glmm1 |> check_model(check = "reqq")
+```
+
+There is little evidence if departure from the assumption that the farms are draws from a Gaussian distribution.
+
+If we were being a *new style random effect* person, we might not worry so much about the distribution of the random intercepts.
+
+:::
+
+We can again use `plot_predictions()` to facilitate visualisation of the model we just fitted. When we did this step earlier, we had to condition on `farm` to produce predictions for all farms because `farm` was included as a fixed effect; otherwise, we would have had to condition on a particular farm, typically the farm with the largest number of observations in the data.
+
+When visualising a mixed effects model, we have a choice as to which levels in the hierarchy we include in the output. If we are not especially interested in the model estimates for specific farms, we can just focus on the higher level of the hierarchy, which are sometimes call *population* level estimates. They are called this because they are intended to represent the typical farm from the population around which all actual farms fall. This is achieved by setting the contribution from the random effect term to the prediction to be equal to **0**.
+
+However, when we have a non-identity link function, as we do here and as we typically would when fitting a GLMM, the model no-longer has such a marginal interpretation as the population estimate. This is because averaging the random effect out to 0 on the link scale is not the same as averaging out the random effect to 0 *on the response scale*. In fact, we can show that the *population* level estimates we achieve from a GLMM are **biased** estimates. SO what are we to do? The pragmatic thing we can do is simply not claim these effects to be population level estimates! Instead we should just treat them as conditional estimates, where what we are conditioning on is "the average subject [here farm] with random effect equal to 0 on the link scale". That's a bit of a mouthful, but really that's the best way to think of these things, as being for an average subject.
+
+Enough jibber jabber; let's see these things!
+
+To create "population" estimates (here average subject estimates), we need to exclude the random effect contribution' we do that by passing `re.form = NA` to `plot_predictions()`. Also, for some unknown (to me) reason, we have to specify the `vcov` argument explicitly:
+
+```{r}
+l1_glmm1 |> plot_predictions(
+  condition = c("length_c", "sex"),
+  re.form = NA,
+  vcov = TRUE
+)
+```
