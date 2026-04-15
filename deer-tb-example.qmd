@@ -43,7 +43,7 @@ deer <- read_table("data/tb-deer.txt", col_types = c("dddddddddddddddd")) |>
   )
 ```
 
-There are multiple variables in the data set, including several the describe the habitat of each estate.
+There are multiple variables in the data set, including several that describe the habitat of each estate.
 
 * `farm` a numerical ID for each farm,
 * `boar_pos_tb`, `boar_sampled_tb`, `deer_pos_tb`, `deer_sampled_tb`, `deer_pos_cervi`, `deer_sampled_cervi`, the number of boar or deer that tested positive, or were sampled, for TB or the parasite *Elaphostrongylus cervi*, respectively,
