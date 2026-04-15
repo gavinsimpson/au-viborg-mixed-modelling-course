@@ -30,6 +30,15 @@ download.file(
 )
 ```
 
+* New example for GLMMs
+
+```r
+url <- "https://raw.githubusercontent.com/gavinsimpson/au-viborg-mixed-modelling-course/refs/heads/main/deer-mixed-model-example.qmd"
+download.file(
+  url, destfile = "./deer-mixed-model-example.qmd"
+)
+```
+
 <!--
 
 * [Monday](https://gavinsimpson.github.io/au-multivariate-stats/computing/01-cluster-analysis/cluster-analysis.html)
