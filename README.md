@@ -19,7 +19,18 @@ Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences
 
 * [Slidedeck](https://gavinsimpson.github.io/au-viborg-mixed-modelling-course/slides/)
 
-<!-- ### Computing
+### Computing
+
+* New QMD file for deer TB example
+
+```{r}
+url <- "https://raw.githubusercontent.com/gavinsimpson/au-viborg-mixed-modelling-course/refs/heads/main/deer-tb-example.qmd"
+download.file(
+  url, destfile = "./deer-tb-example.qmd"
+)
+```
+
+<!--
 
 * [Monday](https://gavinsimpson.github.io/au-multivariate-stats/computing/01-cluster-analysis/cluster-analysis.html)
 
