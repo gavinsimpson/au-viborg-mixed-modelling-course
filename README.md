@@ -23,7 +23,7 @@ Gavin Simpson, Assistant Professor, Department of Animal and Veterinary Sciences
 
 * New QMD file for deer TB example
 
-```{r}
+```r
 url <- "https://raw.githubusercontent.com/gavinsimpson/au-viborg-mixed-modelling-course/refs/heads/main/deer-tb-example.qmd"
 download.file(
   url, destfile = "./deer-tb-example.qmd"
