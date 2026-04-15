@@ -1260,7 +1260,7 @@ layout(matrix(1:4, ncol = 2, byrow = TRUE))
 moth_glm1 |&gt; plot()
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-18-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-18-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ``` r
 layout(1)
@@ -1276,7 +1276,7 @@ library("gglm")
 moth_glm1 |&gt; gglm()
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-19-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-19-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1303,7 +1303,7 @@ Residuals vs. linear predictor plot
 ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-20-1.svg" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-20-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1316,7 +1316,7 @@ ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 ggplot(data = moth_glm1) + stat_normal_qq() # plot(moth_glm1, which = 2)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-21-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-21-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1330,7 +1330,7 @@ library("gratia")
 qq_plot(moth_glm1, method = "simulate")
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-22-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-22-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1358,7 +1358,7 @@ Scale location plot
 ggplot(data = moth_glm1) + stat_scale_location() # plot(moth_glm1, which = 3)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-23-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-23-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1371,7 +1371,7 @@ Cooks distance vs. leverage &amp;mdash; influence of outliers
 ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-24-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-24-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1382,7 +1382,7 @@ ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 gglm(moth_glm1)    # Poisson
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-25-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-25-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -1393,7 +1393,7 @@ gglm(moth_glm1)    # Poisson
 gglm(moth_glm3)    # Negative binomial
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-26-1.svg" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-26-1.svg" alt="" width="75%" style="display: block; margin: auto;" /&gt;
 
 ---
 

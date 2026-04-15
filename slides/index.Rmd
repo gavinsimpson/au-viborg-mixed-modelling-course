@@ -983,7 +983,7 @@ class: inverse middle center subsection
 
 # Model diagnostics
 
-```{r, fig.width = 6}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 layout(matrix(1:4, ncol = 2, byrow = TRUE))
 moth_glm1 |> plot()
 layout(1)
@@ -993,7 +993,7 @@ layout(1)
 
 # Model diagnostics
 
-```{r, fig.width = 6, cache = FALSE}
+```{r, fig.width = 6, fig.align="center", out.width="75%", cache = FALSE}
 library("gglm")
 moth_glm1 |> gglm()
 ```
@@ -1018,7 +1018,7 @@ Four plots produced by `plot()` method
 
 Residuals vs. linear predictor plot
 
-```{r}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 ```
 
@@ -1028,7 +1028,7 @@ ggplot(data = moth_glm1) + stat_fitted_resid() # plot(moth_glm1, which = 1)
 
 (Normal) quantile-quantile (QQ) plot
 
-```{r}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 ggplot(data = moth_glm1) + stat_normal_qq() # plot(moth_glm1, which = 2)
 ```
 
@@ -1038,7 +1038,7 @@ ggplot(data = moth_glm1) + stat_normal_qq() # plot(moth_glm1, which = 2)
 
 Nothing in theory requires deviance residuals to be Gaussian
 
-```{r}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 library("gratia")
 qq_plot(moth_glm1, method = "simulate")
 ```
@@ -1064,7 +1064,7 @@ A scale-location plot changes the y-axis so that it
 
 Scale location plot
 
-```{r}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 ggplot(data = moth_glm1) + stat_scale_location() # plot(moth_glm1, which = 3)
 ```
 
@@ -1074,7 +1074,7 @@ ggplot(data = moth_glm1) + stat_scale_location() # plot(moth_glm1, which = 3)
 
 Cooks distance vs. leverage &mdash; influence of outliers
 
-```{r}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 ```
 
@@ -1082,7 +1082,7 @@ ggplot(data = moth_glm1) + stat_cooks_leverage() # plot(moth_glm1, which = 5)
 
 # Model diagnostics &mdash; bad
 
-```{r}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 gglm(moth_glm1)    # Poisson
 ```
 
@@ -1090,7 +1090,7 @@ gglm(moth_glm1)    # Poisson
 
 # Model diagnostics &mdash; OK?
 
-```{r}
+```{r, fig.width = 6, fig.align="center", out.width="75%"}
 gglm(moth_glm3)    # Negative binomial
 ```
 
