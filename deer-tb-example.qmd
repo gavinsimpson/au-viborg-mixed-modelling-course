@@ -1,0 +1,259 @@
+---
+title: "Distribution of tuberculosis and *Elaphostrongylus cervi* in red deer in Spain"
+format:
+  html:
+    toc: true
+    html-math-method: katex
+    embed-resources: true
+    monobackgroundcolor: "white"
+knitr:
+  opts_chunk: 
+    echo: true
+    fig.align: center
+highlight-style: github-dark
+---
+
+In this activity, you will practice fitting a generalized linear model where the response data are counts from a total. The data are again from Vicente *et al* (2006), who analysed the presence of tuberculosis in red deer, *Cervus elaphus* on estates where wild boar are also present. These data formed part of a study looking at the potential importance of wild board in maintaining tuberculosis in south central Spain.
+
+Before we being, let's load some packages
+
+```{r}
+#| message: false
+#| label: setup
+library("janitor")
+library("dplyr")
+library("tibble")
+library("tidyr")
+library("readr")
+library("ggplot2")
+library("gglm")
+library("performance")
+library("marginaleffects")
+```
+
+Now we can load the data
+
+```{r}
+# there are 16 "d"
+deer <- read_table("data/tb-deer.txt", col_types = c("dddddddddddddddd")) |>
+  janitor::clean_names() |>
+  rename("red_deer_index" = "reed_deer_index") |>
+  mutate(
+    fenced = factor(fenced, labels = c("No", "Yes"), levels = 0:1)
+  )
+```
+
+There are multiple variables in the data set, including several the describe the habitat of each estate.
+
+* `farm` a numerical ID for each farm,
+* `boar_pos_tb`, `boar_sampled_tb`, `deer_pos_tb`, `deer_sampled_tb`, `deer_pos_cervi`, `deer_sampled_cervi`, the number of boar or deer that tested positive, or were sampled, for TB or the parasite *Elaphostrongylus cervi*, respectively,
+* `open_land`, `scrub_land`, `pine_plantation`, the percentage of open land, scrub, or pine plantation on each estate,
+* `quercus_plants`, `quercus_trees`, the number of *Quercus* (Oak) plants and trees per area,
+* `wild_boar_index`, `red_deer_index`, abundance index for wild board and red deer respectively,
+* `estate_size` in hectares (ha),
+* `fenced` an indicator variable showing whether the estate was fenced or not.
+
+We will start by looking at the prevalence of the parasite *E. cervi* in red deer. Recall that at each farm, a number of red deer were selected and sampled for presence of the parasite *E. cervi* (`deer_sampled_cervi`), of which `deer_pos_cervi` animals tested positive for the parasite.
+
+::: {.callout-note}
+# Question
+
+The response data of interest in this example is the number of deer that tested positive out of the number of deer tested. What response or error distribution (`family`) is appropriate for modelling these counts? Why?
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+The binomial distribution is appropriate. While the data are counts, the Poisson or negative binomial distributions are not appropriate in this case because the data are counts from a total. There is an upper limit on the number of deer that can test positive, and that is the number of deer that were sampled on each farm.
+
+:::
+
+There are several ways to fit a GLM to data like this using R's `glm()` function --- you can read `?glm` for the ways in which one can specify the response for this type or GLM. One possible way is to provide as the response a two-column matrix containing the number of successes (here a positive test) and the number of failures (a negative test) for each farm. The data already contains the former, but the latter needs to be computed
+
+```{r}
+deer <- deer |>
+  mutate(
+    deer_neg_cervi = deer_sampled_cervi - deer_pos_cervi
+  )
+```
+
+The model we will fit will contain all of the predictors except `pine_plantation`, as this variable is highly collinear with the other percentage habitat variables in the data. The model we wish to fit is
+
+\begin{align*}
+Y\_i \sim& \mathcal{B}(\mu_i, n_i) \\
+\mathbb{E}(Y_i) =& \mu_i \cdot n_i \\
+\text{logit}(\mu_i) =& \beta_0 + \beta_1 \mathtt{open_land}_i + \beta_2 \mathtt{scrub_land}_i +\\
+                     & \beta_3 \mathtt{quercus_plants}_i + \beta_4 \mathtt{quercus_trees}_i +\\
+                     & \beta_5 \mathtt{red_deer_index}_i + \beta_6 \mathtt{estate_size}_i +\\
+                     & \beta_7 \mathtt{fenced}_i
+\end{align*}
+
+Here $Y_i$, the response of our model, the number of deer infected by *E cervi* out of the $n_i$ animals tested per estate. $\mu_i$ is the probability of infection, which we multiply by $n_i$ to get the expected number of positive tests per estate $\mathbb{E}(Y_i)$.
+
+::: {.callout-note}
+# Question
+
+Fit this model using R's `glm()` function. Note that to specify the response for this model you will need to use `cbind(deer_pos_cervi, deer_neg_cervi)` to create the required two-column matrix.
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r}
+ecervi_glm <- glm(
+  cbind(deer_pos_cervi, deer_neg_cervi) ~ open_land + scrub_land +
+    quercus_plants + quercus_trees + 
+    red_deer_index + estate_size + fenced,
+  data = deer,
+  family = binomial(link = "logit")
+)
+```
+
+:::
+
+::: {.callout-note}
+# Question
+
+Use the `check_model()` function from the *performance* 📦 to produce model diagnostics plots. Assess the model, do you see any problems?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+```{r}
+#| label: ecervi-model-checks
+#| fig-width: 10
+#| fig-height: 10
+ecervi_glm |> check_model()
+```
+
+The main issue is that the model tends to over-predict higher rates of infection and under predict lower rates, as seen in the posterior predictive check plot. There are also a few influential observations that should be checked.
+
+:::
+
+Let's take the model as given, and proceed to look at what this model tells us.
+
+We can plot conditional predictions from the model using the `plot_predictions()` function from *marginaleffects*. For example, to produce a plot of how the predicted probability of infection varies as a function of the % of open land, while holding all other variables at their mean or modal value, we would use
+
+```{r}
+ecervi_glm |>
+  plot_predictions(condition = "open_land")
+```
+
+This effect will be for *fenced* estates as this is the modal category; most estates are fenced
+
+```{r}
+deer |>
+  count(fenced)
+```
+
+It is important to be aware of what is being conditioned on so you can interpret the output correctly. In this case, we can condition on `fenced` also, and get estimates for the two types of estates
+
+```{r}
+ecervi_glm |>
+  plot_predictions(condition = c("open_land", "fenced"))
+```
+::: {.callout-note}
+# Question
+
+Explore some of the other effects using `plot_predictions()`
+
+:::
+
+One of the other ways to diagnose problems with a model is to plot the residuals against the covariates in the model. This might diagnose problems with the linear effects included in the model; should effects be non-linear instead?
+
+This should be easy with the *broom* 📦 package, but there seems to be a bug related to the missing values in the data. So we need to do the augment of the data with residuals by hand. First we need to refit the model with `na.action = na.exclude`
+
+```{r}
+ecervi_glm_na <- update(
+  ecervi_glm,
+  na.action = "na.exclude"
+)
+```
+
+The `na.action` bit instructs R to insert `NA`s back into the fitted values and residuals for the model.
+
+```{r}
+deer_res <- deer |>
+  select(open_land:fenced) |>
+  mutate(
+    .resid = residuals(ecervi_glm_na)
+  )
+```
+
+Next, we pivot the data into a long format, with each covariate, except `fenced` collapsed into a single column of `values`, with a `variable` column indexing to which covariate each row belongs.
+
+```{r}
+deer_res_l <- deer_res |>
+  pivot_longer(
+    cols = !c(.resid, fenced),
+    names_to = "variable",
+    values_to = "values"
+  )
+```
+
+Finally we can plot these with a smoother, faceting on the `variable`.
+
+```{r}
+deer_res_l |>
+  ggplot(
+    aes(
+      x = values,
+      y = .resid,
+      colour = fenced
+    )
+  ) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  facet_wrap(~ variable, scales = "free_x") +
+  labs(x = "x")
+```
+::: {.callout-note}
+# Question
+
+Look at the plots? are there any variables that show strong non-linear patterns in the residuals?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+The main candidate seems to be `scrub_land`.
+
+You could try refitting the model with polynomials of `scrub_land`, up to order 3. This is where GAMs would come in really useful, but that's for another course.
+
+To fit a third order polynomial of `scrub_land` instead of a linear effect, we could write out the entire model again, or more simply, just `update()` it:
+
+```{r}
+ecervi_glm2 <- update(
+  ecervi_glm,
+  . ~ . - scrub_land + poly(scrub_land, 3)
+)
+```
+
+:::
+
+::: {.callout-note}
+# Question
+
+You could now use `check_model()` and `check_predictions()` to look at the diagnostics for this updated model. Pay particular attention to the posterior predictive checks, which you can focus on using the `check_predictions()` function.
+
+Has the model been improved through the introduction of the polynomial effect of `scrub_land`?
+
+:::
+
+::: {.callout-tip collapse="true"}
+# Answer
+
+The model posterior predictive checks seem very much improved; the data lies much more closely within the spaghetti plot of lines for the data simulated form the model.
+
+:::
+
+::: {.callout-note}
+# Question
+
+As a stretch goal for this exercise, try running the above analysis again, but for the number of positive TB cases out of $n_i$ sampled red deer.
+
+:::
