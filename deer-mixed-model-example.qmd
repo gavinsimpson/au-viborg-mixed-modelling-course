@@ -284,3 +284,20 @@ l1_glmm1 |> plot_predictions(
   vcov = TRUE
 )
 ```
+
+## GLMM for the continuous response
+
+```{r}
+#| cache: false
+library("mgcv")
+```
+
+```{r}
+intensity_glmm1 <- gam(
+  ecervi ~ sex + length_c + sex:length_c +    # fixed effects
+    s(farm, bs = "re"),                       # random effect
+  data = deer_l1,
+  family = tw(link = "log"),
+  method = "REML"
+)
+```
